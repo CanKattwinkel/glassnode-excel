@@ -5,12 +5,12 @@
   <ProviderName>Glassnode</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Glassnode Excel AddIn"/>
-  <Description DefaultValue="Write your own Excel functions in TypeScript."/>
+  <Description DefaultValue="Access the Glassnode API directly in Excel"/>
   <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-64.png"/>
-  <SupportUrl DefaultValue="https://www.contoso.com/help"/>
+  <SupportUrl DefaultValue="https://glassnode.com/contact/general"/>
   <AppDomains>
-    <AppDomain>https://www.contoso.com</AppDomain>
+    <AppDomain>https://glassnode.com</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Workbook"/>

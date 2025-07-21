@@ -16,10 +16,10 @@ function getApiKey(): string | null {
 /**
  * Fetches asset IDs from Glassnode API
  * @customfunction
- * @param limit Maximum number of assets to return (default: 100)
+ * @param limit Maximum number of assets to return
  * @returns Array of asset IDs
  */
-export async function ASSETS(limit: number = 100 ): Promise<string[][]> {
+export async function ASSETS(limit?: number ): Promise<string[][]> {
   try {
     // Get API key from settings
     const apiKey = getApiKey();
@@ -78,7 +78,6 @@ export async function METRIC(
   endDate?: string
 ): Promise<string[][]> {
   try {
-    console.log('555555555444333331M2ETRIC function called with:', { asset, metric, startDate, endDate });
     
     // Get API key from settings
     const apiKey = getApiKey();
@@ -149,7 +148,7 @@ export async function METRIC(
 
     // Use proxy path for development, direct API for production
     const isDevelopment = window.location.hostname === 'localhost';
-    const apiUrl = isDevelopment 
+    const apiUrl = isDevelopment
       ? `/api/glassnode/v1/metrics${metric}?${params.toString()}`
       : `https://api.glassnode.com/v1/metrics${metric}?${params.toString()}`;
 

@@ -19,13 +19,13 @@ This Excel add-in enables users to fetch cryptocurrency metrics and data directl
 Returns a list of available cryptocurrency assets from Glassnode.
 
 **Parameters:**
-- `limit` (optional): Maximum number of assets to return (default: 100)
+- `limit` (optional): Maximum number of assets to return (default: all assets)
 
 **Returns:** Array of asset IDs (e.g., "BTC", "ETH", "ADA")
 
 **Example:**
 ```excel
-=GN.ASSETS()          // Returns first 100 assets
+=GN.ASSETS()          // Returns all available assets
 =GN.ASSETS(50)        // Returns first 50 assets
 ```
 
