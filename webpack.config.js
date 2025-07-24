@@ -7,7 +7,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const path = require("path");
 
 const urlDev = "https://localhost:3000/";
-const urlProd = "https://cdn.glassnode.com/msexcel/";
+const urlProd = "https://cdn-msoffice.glassnode.com/msexcel/";
 
 /* global require, module, process, __dirname */
 

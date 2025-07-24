@@ -17,6 +17,7 @@ function getApiKey(): string | null {
  * Fetches asset IDs from Glassnode API
  * @customfunction
  * @param limit Maximum number of assets to return
+ * @helpUrl https://github.com/CanKattwinkel/glassnode-excel/
  * @returns Array of asset IDs
  */
 export async function ASSETS(limit?: number ): Promise<string[][]> {
@@ -66,9 +67,10 @@ export async function ASSETS(limit?: number ): Promise<string[][]> {
  * Fetches metric data from Glassnode API
  * @customfunction
  * @param asset Asset ID (e.g., "BTC")
- * @param metric Metric path (e.g., "/addresses/active_count")
+ * @param metric Metric path as used in the API (e.g., "/addresses/active_count" - starting with /)
  * @param startDate Start date as string (required, e.g., "2024-01-01")
  * @param endDate End date as string (optional, e.g., "2024-01-31")
+ * @helpUrl https://github.com/CanKattwinkel/glassnode-excel/
  * @returns Single value or table with Date and metric columns
  */
 export async function METRIC(
@@ -177,7 +179,7 @@ export async function METRIC(
     if (!endDate || result.length === 1) {
       const value = result[0]?.v;
       console.log('Returning single value:', { endDate: !!endDate, resultLength: result.length, value, firstItem: result[0] });
-      return value !== undefined ? [[value.toString()]] : [['No data available']];
+      return value !== undefined ? [[value]] : [['No data available']];
     }
 
     // Return table format with headers
@@ -186,7 +188,7 @@ export async function METRIC(
     
     const dataRows = result.map(item => [
       new Date(item.t * 1000).toISOString().split('T')[0], // Convert Unix timestamp to YYYY-MM-DD format
-      item.v.toString()  // Convert value to string
+      item.v  // Convert value to string
     ]);
 
     console.log('Returning table format:', { 

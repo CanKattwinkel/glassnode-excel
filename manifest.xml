@@ -4,8 +4,8 @@
   <Version>1.0.0.0</Version>
   <ProviderName>Glassnode</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="Glassnode Excel AddIn"/>
-  <Description DefaultValue="Access the Glassnode API directly in Excel"/>
+  <DisplayName DefaultValue="Glassnode Add-In for Excel"/>
+  <Description DefaultValue="Access the Glassnode API"/>
   <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-64.png"/>
   <SupportUrl DefaultValue="https://glassnode.com/contact/general"/>
@@ -95,13 +95,13 @@
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="Functions.Namespace" DefaultValue="GN"/>
-        <bt:String id="GetStarted.Title" DefaultValue="Get started with the Glassnode add-in!"/>
+        <bt:String id="GetStarted.Title" DefaultValue="Get started with the Glassnode Add-In!"/>
         <bt:String id="CommandsGroup.Label" DefaultValue="Commands Group"/>
         <bt:String id="TaskpaneButton.Label" DefaultValue="Glassnode"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="GetStarted.Description" DefaultValue="Your Glassnode add-in was installed. Add your API key to start using it."/>
-        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Click to Configure the Glassnode Add-in"/>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Click to Configure the Glassnode Add-In"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>

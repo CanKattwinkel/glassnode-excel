@@ -64,42 +64,5 @@ Fetches metric data from Glassnode API with flexible return format.
 
 ## Development
 
-### Local Development Setup
-
-To run the add-in locally for development:
-
-1. **Build and Start Dev Server:**
-   ```bash
-   npm run build && npm run dev-server
-   ```
-
-2. **Start Excel Integration:**
-   ```bash
-   npm start
-   ```
-
-### Development Notes
-
-- Live reload functionality is currently limited
-- For reliable reloads when modifying `functions.ts`:
-  1. Re-run `npm run build && npm run dev-server`
-  2. Refresh the add-in in Safari's debug tab
-- This workflow ensures consistent function updates during development
-
-### Testing
-
-The project includes Jest-based unit testing for custom functions:
-
-**Test Scripts:**
-- `npm test` - Run all tests
-- `npm run test:coverage` - Run tests with coverage report
-- `npm run test:watch` - Run tests in watch mode
-
-**Test Coverage:**
-- HTTP request mocking with `jest.fn()`
-- localStorage mocking for API key functionality
-- Error handling and edge cases
-- Both `ASSETS` and `METRIC` functions
-
-Tests are automatically excluded from webpack builds and run independently of the development workflow.
+For development setup, testing instructions, and contribution guidelines, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
