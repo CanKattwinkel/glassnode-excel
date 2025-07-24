@@ -85,6 +85,30 @@ The following development tasks are available via VS Code or npm:
 - **Watch**: `npm run watch` - Watch for file changes and rebuild
 - **Stop Debug**: `npm run stop` - Stop debugging session
 
+## Releasing
+
+To create and publish a new release of the add-in:
+
+1. **Build the project:**
+   ```bash
+   npm run build
+   ```
+
+2. **Validate the manifest:**
+   ```bash
+   npx office-addin-manifest validate -p dist/manifest.xml
+   ```
+
+3. **Upload to CDN:**
+   - Upload the `dist` folder to the bucket `cdn-mi-prod-msoffice-6ed0/msexcel`
+   - Note: This CDN has an aggressive cache for 1 hour
+
+4. **Submit to Microsoft Partner Center:**
+   - Navigate to https://partner.microsoft.com/en-us/dashboard/office/
+   - Select "Microsoft 365 and Copilot"
+   - Select the add-in to submit a new release
+   - Upload the manifest file and release
+
 ## Project Structure
 
 ```
