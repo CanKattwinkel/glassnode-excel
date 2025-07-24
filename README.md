@@ -1,6 +1,6 @@
-# Glassnode Excel Add-In
+# Glassnode Add-In for Excel
 
-A Microsoft Excel add-in that provides direct access to Glassnode's cryptocurrency data API within Excel spreadsheets.
+A Microsoft Excel add-in that provides direct access to Glassnode's digital asset data API within Excel spreadsheets.
 
 ## Overview
 
