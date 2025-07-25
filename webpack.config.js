@@ -95,6 +95,11 @@ module.exports = async (env, options) => {
         chunks: ["polyfill", "commands"],
       }),
     ],
+    watchOptions: {
+      ignored: ['**/dist'],
+      aggregateTimeout: 300,
+      poll: false
+    },
     devServer: {
       static: {
         directory: path.join(__dirname, "dist"),

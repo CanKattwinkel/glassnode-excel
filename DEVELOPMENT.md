@@ -16,6 +16,23 @@ To run the add-in locally for development:
    npm start
    ```
 
+3. **Start Watch Server:**
+   
+   Excel Custom Functions require physical files on disk rather than in-memory builds from the dev server. This watch process ensures the `functions.json` metadata file is regenerated whenever you modify `functions.ts`. See [this GitHub issue](https://github.com/OfficeDev/generator-office/issues/846) for technical details.
+   
+   ```bash
+   npm run watch
+   ```
+
+## Hot Reload Limitations
+
+Custom Functions don't automatically reload when files change (particularly on macOS). To refresh functions during development:
+
+1. Open Safari's Developer menu → "Develop" → [Your Excel instance]
+2. In the Safari debugger, click the refresh button in the top-left corner
+3. Your updated functions will now be available in Excel
+
+
 ## Manual Side Loading (Mac)
 
 For manual installation and testing on Mac without using the automated development tools:
