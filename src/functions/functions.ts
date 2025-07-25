@@ -15,6 +15,47 @@ async function getApiKey(): Promise<string | null> {
 }
 
 /**
+ * Helper function to convert date input to Unix timestamp
+ * @param dateInput Date as Excel serial number or YYYY-MM-DD string
+ * @returns Unix timestamp in seconds or null if invalid
+ */
+function parseDate(dateInput: string | number): { timestamp: number; error?: string } {
+  // If it's a number, treat as Excel serial number
+  if (typeof dateInput === 'number') {
+    const excelEpoch = new Date('1900-01-01').getTime();
+    const millisecondsPerDay = 24 * 60 * 60 * 1000;
+    const dateObj = new Date(excelEpoch + (dateInput - 2) * millisecondsPerDay);
+    return { timestamp: Math.floor(dateObj.getTime() / 1000) };
+  }
+
+  // If it's a string, check if it's a number (Excel serial as string) or date string
+  const dateStr = dateInput.toString().trim();
+  
+  // Try to parse as YYYY-MM-DD format first
+  const dateStringPattern = /^\d{4}-\d{2}-\d{2}$/;
+  if (dateStringPattern.test(dateStr)) {
+    const dateObj = new Date(dateStr + 'T00:00:00.000Z'); // Parse as UTC
+    if (!isNaN(dateObj.getTime())) {
+      return { timestamp: Math.floor(dateObj.getTime() / 1000) };
+    }
+  }
+
+  // Try to parse as Excel serial number  
+  const serialNumber = parseFloat(dateStr);
+  if (!isNaN(serialNumber) && serialNumber > 1000) { // Reasonable check for Excel serial numbers
+    const excelEpoch = new Date('1900-01-01').getTime();
+    const millisecondsPerDay = 24 * 60 * 60 * 1000;
+    const dateObj = new Date(excelEpoch + (serialNumber - 2) * millisecondsPerDay);
+    return { timestamp: Math.floor(dateObj.getTime() / 1000) };
+  }
+
+  return { 
+    timestamp: 0, 
+    error: 'Invalid date format. Expected YYYY-MM-DD or Excel serial number.' 
+  };
+}
+
+/**
  * Fetches asset IDs from Glassnode API
  * @customfunction
  * @param limit Maximum number of assets to return
@@ -77,8 +118,8 @@ export async function ASSETS(limit?: number ): Promise<string[][]> {
 export async function METRIC(
   asset: string,
   metric: string,
-  startDate: string,
-  endDate?: string
+  startDate: string | number,
+  endDate?: string | number
 ): Promise<string[][]> {
   try {
     
@@ -102,37 +143,24 @@ export async function METRIC(
       return [['Error: Invalid path, make sure to use API endpoint notation like /addresses/active_count']];
     }
 
-    // Convert date strings to timestamps (in seconds)
-    // Excel dates are serial numbers representing days since January 1, 1900
-    // Excel's epoch is January 1, 1900, but it incorrectly treats 1900 as a leap year
-    // So we need to account for this by subtracting 1 day from dates after Feb 28, 1900
-    const excelEpoch = new Date('1900-01-01').getTime();
-    const millisecondsPerDay = 24 * 60 * 60 * 1000;
-    
-    const startDateSerial = parseFloat(startDate);
-    if (isNaN(startDateSerial)) {
-      console.log('Invalid start date - not a number:', startDate);
-      return [['Error: Invalid start date format. Expected Excel date serial number.']];
+    // Convert start date to timestamp
+    const startDateResult = parseDate(startDate);
+    if (startDateResult.error) {
+      console.log('Invalid start date:', startDate, startDateResult.error);
+      return [['Error: ' + startDateResult.error]];
     }
-    
-    // Convert Excel serial date to JavaScript Date
-    // Subtract 2 days to account for Excel's epoch difference and leap year bug
-    const startDateObj = new Date(excelEpoch + (startDateSerial - 2) * millisecondsPerDay);
-    const startTimestamp = Math.floor(startDateObj.getTime() / 1000); // Convert to seconds for Unix timestamp
-    console.log('Start date converted:', { startDate, startDateSerial, startDateObj, startTimestamp });
+    const startTimestamp = startDateResult.timestamp;
+    console.log('Start date converted:', { startDate, startTimestamp });
     
     let endTimestamp: number | null = null;
-    if (endDate) {
-      const endDateSerial = parseFloat(endDate);
-      if (isNaN(endDateSerial)) {
-        console.log('Invalid end date - not a number:', endDate);
-        return [['Error: Invalid end date format. Expected Excel date serial number.']];
+    if (endDate !== undefined) {
+      const endDateResult = parseDate(endDate);
+      if (endDateResult.error) {
+        console.log('Invalid end date:', endDate, endDateResult.error);
+        return [['Error: ' + endDateResult.error]];
       }
-      
-      // Convert Excel serial date to JavaScript Date
-      const endDateObj = new Date(excelEpoch + (endDateSerial - 2) * millisecondsPerDay);
-      endTimestamp = Math.floor(endDateObj.getTime() / 1000); // Convert to seconds for Unix timestamp
-      console.log('End date converted:', { endDate, endDateSerial, endDateObj, endTimestamp });
+      endTimestamp = endDateResult.timestamp;
+      console.log('End date converted:', { endDate, endTimestamp });
     }
 
     // Build URL parameters

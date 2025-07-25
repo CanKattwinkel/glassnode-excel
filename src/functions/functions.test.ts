@@ -128,7 +128,7 @@ describe('METRIC function', () => {
     const excelDate = '44562';
     const result = await METRIC('BTC', '/addresses/active_count', excelDate);
 
-    expect(result).toEqual([['100.5']]);
+    expect(result).toEqual([[100.5]]);
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/glassnode/v1/metrics/addresses/active_count')
     );
@@ -155,8 +155,8 @@ describe('METRIC function', () => {
 
     expect(result).toEqual([
       ['Date', 'active.count'],
-      ['2022-01-01', '100.5'],
-      ['2022-01-02', '102.3'],
+      ['2022-01-01', 100.5],
+      ['2022-01-02', 102.3],
     ]);
   });
 
@@ -179,7 +179,7 @@ describe('METRIC function', () => {
   it('should return error when date format is invalid', async () => {
     const result = await METRIC('BTC', '/addresses/active_count', 'invalid-date');
 
-    expect(result).toEqual([['Error: Invalid start date format. Expected Excel date serial number.']]);
+    expect(result).toEqual([['Error: Invalid date format. Expected YYYY-MM-DD or Excel serial number.']]);
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
@@ -219,5 +219,116 @@ describe('METRIC function', () => {
 
     const expectedUrl = '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1640995200&u=1641081600';
     expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
+  });
+
+  it('should fetch BTC price data for January 2024 date range', async () => {
+    // Mock response data for BTC price from 2024-01-01 to 2024-01-30
+    const mockResponse = [
+      { t: 1704067200, v: 42167.84 }, // 2024-01-01
+      { t: 1704153600, v: 44172.56 }, // 2024-01-02
+      { t: 1704240000, v: 44294.32 }, // 2024-01-03
+      { t: 1706572800, v: 43156.78 }, // 2024-01-30
+    ];
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse,
+    });
+
+    // Excel date serial numbers for 2024-01-01 and 2024-01-30
+    // 2024-01-01 = 45292, 2024-01-30 = 45321
+    const startDate = '45292'; // 2024-01-01
+    const endDate = '45321';   // 2024-01-30
+    
+    const result = await METRIC('BTC', '/market/price_usd_close', startDate, endDate);
+
+    // Verify the result format
+    expect(result).toEqual([
+      ['Date', 'price.usd.close'],
+      ['2024-01-01', 42167.84],
+      ['2024-01-02', 44172.56],
+      ['2024-01-03', 44294.32],
+      ['2024-01-30', 43156.78],
+    ]);
+
+    // Verify the API was called with correct parameters
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200&u=1706572800'
+    );
+    
+    // Verify call was made exactly once
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('should handle optional parameters correctly', async () => {
+    const mockResponse = [{ t: 1704067200, v: 100.5 }];
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse,
+    });
+
+    const startDate = '45292'; // 2024-01-01
+    
+    await METRIC('BTC', '/addresses/active_count', startDate, undefined, 'tier=1', 'currency=USD');
+
+    // Verify the API was called with optional parameters
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&tier=1&currency=USD'
+    );
+  });
+
+  it('should handle date strings (YYYY-MM-DD format) for single date', async () => {
+    const mockResponse = [{ t: 1704067200, v: 45123.45 }];
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse,
+    });
+
+    // Test with date string instead of Excel serial number
+    const result = await METRIC('BTC', '/market/price_usd_close', '2024-01-01');
+
+    expect(result).toEqual([[45123.45]]);
+    
+    // Verify the API was called with correct timestamp for 2024-01-01
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200'
+    );
+  });
+
+  it('should handle date strings (YYYY-MM-DD format) for date range', async () => {
+    const mockResponse = [
+      { t: 1704067200, v: 42167.84 }, // 2024-01-01
+      { t: 1704153600, v: 44172.56 }, // 2024-01-02
+      { t: 1706572800, v: 43156.78 }, // 2024-01-30
+    ];
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse,
+    });
+
+    // Test with date strings instead of Excel serial numbers
+    const result = await METRIC('BTC', '/market/price_usd_close', '2024-01-01', '2024-01-30');
+
+    expect(result).toEqual([
+      ['Date', 'price.usd.close'],
+      ['2024-01-01', 42167.84],
+      ['2024-01-02', 44172.56],
+      ['2024-01-30', 43156.78],
+    ]);
+
+    // Verify the API was called with correct timestamps
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200&u=1706572800'
+    );
+  });
+
+  it('should return error for invalid date string format', async () => {
+    const result = await METRIC('BTC', '/market/price_usd_close', 'invalid-date-format');
+
+    expect(result).toEqual([['Error: Invalid date format. Expected YYYY-MM-DD or Excel serial number.']]);
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 });
