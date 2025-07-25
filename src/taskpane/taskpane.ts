@@ -3,7 +3,7 @@
  * See LICENSE in the project root for license information.
  */
 
-/* global console, document, Excel, Office */
+/* global console, document, Excel, Office, OfficeRuntime */
 
 // The initialize function must be run each time a new page is loaded
 Office.onReady(() => {
@@ -27,8 +27,8 @@ export async function saveApiKey() {
       return;
     }
     
-    // Save to localStorage (works across all contexts)
-    localStorage.setItem('glassnodeApiKey', apiKey);
+    // Save using OfficeRuntime.storage (works across all contexts)
+    await OfficeRuntime.storage.setItem('glassnodeApiKey', apiKey);
     
     statusDiv.textContent = "API key saved successfully";
     statusDiv.style.color = "#107c10";
@@ -41,9 +41,10 @@ export async function saveApiKey() {
   }
 }
 
-export function loadApiKey() {
+export async function loadApiKey() {
   try {
-    const apiKey = localStorage.getItem('glassnodeApiKey');
+    // Use OfficeRuntime.storage (works across all contexts)
+    const apiKey = await OfficeRuntime.storage.getItem('glassnodeApiKey');
     
     if (apiKey) {
       const apiKeyInput = document.getElementById("api-key-input") as HTMLInputElement;
@@ -55,15 +56,5 @@ export function loadApiKey() {
     }
   } catch (error) {
     console.error('Error loading API key:', error);
-  }
-}
-
-// Helper function to get the API key for use in other functions
-export function getApiKey(): string | null {
-  try {
-    return localStorage.getItem('glassnodeApiKey');
-  } catch (error) {
-    console.error('Error getting API key:', error);
-    return null;
   }
 }

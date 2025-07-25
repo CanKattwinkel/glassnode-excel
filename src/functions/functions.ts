@@ -1,12 +1,13 @@
-﻿/* global console, CustomFunctions, Office */
+﻿/* global console, CustomFunctions, OfficeRuntime */
 
 /**
- * Helper function to get the API key from localStorage
+ * Helper function to get the API key from OfficeRuntime.storage
  * @returns The stored API key or null if not found
  */
-function getApiKey(): string | null {
+async function getApiKey(): Promise<string | null> {
   try {
-    return localStorage.getItem('glassnodeApiKey');
+    // Use OfficeRuntime.storage (works across all contexts)
+    return await OfficeRuntime.storage.getItem('glassnodeApiKey');
   } catch (error) {
     console.error('Error getting API key:', error);
     return null;
@@ -23,13 +24,13 @@ function getApiKey(): string | null {
 export async function ASSETS(limit?: number ): Promise<string[][]> {
   try {
     // Get API key from settings
-    const apiKey = getApiKey();
+    const apiKey = await getApiKey();
     if (!apiKey) {
       return [['Error: API key not configured. Please set your API key in the task pane.']];
     }
     
     // Use proxy path for development, direct API for production
-    const isDevelopment = window.location.hostname === 'localhost';
+    const isDevelopment = window?.location?.hostname === 'localhost';
     const apiUrl = isDevelopment 
       ? `/api/glassnode/v1/metadata/assets?api_key=${apiKey}`
       : `https://api.glassnode.com/v1/metadata/assets?api_key=${apiKey}`;
@@ -82,7 +83,7 @@ export async function METRIC(
   try {
     
     // Get API key from settings
-    const apiKey = getApiKey();
+    const apiKey = await getApiKey();
     if (!apiKey) {
       console.log('API key not found');
       return [['Error: API key not configured. Please set your API key in the task pane.']];
