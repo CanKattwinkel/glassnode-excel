@@ -110,8 +110,12 @@ export async function ASSETS(limit?: number ): Promise<string[][]> {
  * @customfunction
  * @param asset Asset ID (e.g., "BTC")
  * @param metric Metric path as used in the API (e.g., "/addresses/active_count" - starting with /)
- * @param startDate Start date as string (required, e.g., "2024-01-01")
- * @param endDate End date as string (optional, e.g., "2024-01-31")
+ * @param startDate Start date as Excel serial number or YYYY-MM-DD string (required, e.g., "2024-01-01" or 45292)
+ * @param endDate End date as Excel serial number or YYYY-MM-DD string (optional, exclusive - data up to but not including this date, e.g., "2024-01-31" or 45321)
+ * @param parameter1 Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
+ * @param parameter2 Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
+ * @param parameter3 Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
+ * @param parameter4 Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
  * @helpUrl https://github.com/CanKattwinkel/glassnode-excel/
  * @returns Single value or table with Date and metric columns
  */
@@ -119,7 +123,11 @@ export async function METRIC(
   asset: string,
   metric: string,
   startDate: string | number,
-  endDate?: string | number
+  endDate?: string | number,
+  parameter1?: string,
+  parameter2?: string,
+  parameter3?: string,
+  parameter4?: string
 ): Promise<string[][]> {
   try {
     
@@ -173,6 +181,22 @@ export async function METRIC(
 
     if (endTimestamp) {
       params.append('u', endTimestamp.toString());
+    }
+
+    // Process optional parameters
+    const optionalParams = [parameter1, parameter2, parameter3, parameter4].filter(Boolean);
+    console.log('Processing optional parameters:', optionalParams);
+    
+    for (const param of optionalParams) {
+      if (param && typeof param === 'string') {
+        const [key, value] = param.split('=');
+        if (key && value) {
+          params.append(key.trim(), value.trim());
+          console.log('Added parameter:', { key: key.trim(), value: value.trim() });
+        } else {
+          console.warn('Invalid parameter format, expected key=value:', param);
+        }
+      }
     }
 
     console.log('URL parameters built:', params.toString());
