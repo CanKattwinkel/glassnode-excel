@@ -147,3 +147,19 @@ src/
 
 On Mac you need to enable remote debugging in Safari and can then access the runtime via the develop menu item in 
 the main toolbar. 
+
+## Windows
+- On Windows, the function and the task pane seem to be loaded in separate execution contexts.  
+  As a result, sharing the API key via `localStorage` is not possible.
+- You can debug the task pane by pressing `Ctrl + Shift + I` while the cursor is focused in the task pane area.  
+  I haven’t yet found a way to debug the function execution context.  
+  I recommend referring to the official Microsoft docs for more details:  
+  [Configure and run the debugger (UI-less add-ins)](https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/debug-ui-less#configure-and-run-the-debugger)
+- Running this Add-In on Excel installed on Windows (e.g. in a test VM):
+   - **Installation**: Place the manifest file on your local machine, share the folder,  
+     embed it via the Trust Center, and install the add-in from there.  
+     [Create a network shared folder catalog](https://learn.microsoft.com/en-us/office/dev/add-ins/testing/create-a-network-shared-folder-catalog-for-task-pane-and-content-add-ins)
+   - **Updating the add-in**: Replace the manifest file.  
+     Note: Our bucket may cache resources like `functions.js` for up to 1 hour.  
+     Then open Excel → Add-ins → More Add-ins → "Shared Folder" section, and click **Refresh** to update.
+   - **Alternative**: Pull the entire project and use the provided `npm` commands.
