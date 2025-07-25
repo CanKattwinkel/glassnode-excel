@@ -178,7 +178,7 @@ export async function METRIC(
     console.log('URL parameters built:', params.toString());
 
     // Use proxy path for development, direct API for production
-    const isDevelopment = window.location.hostname === 'localhost';
+    const isDevelopment = window?.location?.hostname === 'localhost';
     const apiUrl = isDevelopment
       ? `/api/glassnode/v1/metrics${metric}?${params.toString()}`
       : `https://api.glassnode.com/v1/metrics${metric}?${params.toString()}`;
