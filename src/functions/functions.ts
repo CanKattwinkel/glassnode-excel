@@ -58,11 +58,11 @@ function parseDate(dateInput: string | number): { timestamp: number; error?: str
 /**
  * Fetches asset IDs from Glassnode API
  * @customfunction
- * @param limit Maximum number of assets to return
+ * @param {number} [limit] Maximum number of assets to return
  * @helpUrl https://github.com/CanKattwinkel/glassnode-excel/
  * @returns Array of asset IDs
  */
-export async function ASSETS(limit?: number ): Promise<string[][]> {
+export async function ASSETS(limit: number = null ): Promise<string[][]> {
   try {
     // Get API key from settings
     const apiKey = await getApiKey();
@@ -92,7 +92,7 @@ export async function ASSETS(limit?: number ): Promise<string[][]> {
     const assetIds = result.data
       .slice(0, limit ?? 50_000)
       .map(asset => asset.id)
-      .filter(id => id); // Filter out any undefined/null IDs
+      .filter(id => id); // Filter out any undefined/null/"" IDs
         console.log("response", assetIds.map(id => [id]));
 
     // Return as 2D array for Excel (each ID in its own row)
@@ -111,11 +111,11 @@ export async function ASSETS(limit?: number ): Promise<string[][]> {
  * @param asset Asset ID (e.g., "BTC")
  * @param metric Metric path as used in the API (e.g., "/addresses/active_count" - starting with /)
  * @param startDate Start date as Excel serial number or YYYY-MM-DD string (required, e.g., "2024-01-01" or 45292)
- * @param endDate End date as Excel serial number or YYYY-MM-DD string (optional, exclusive - data up to but not including this date, e.g., "2024-01-31" or 45321)
- * @param parameter1 Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
- * @param parameter2 Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
- * @param parameter3 Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
- * @param parameter4 Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
+ * @param [endDate] End date as Excel serial number or YYYY-MM-DD string (optional, exclusive - data up to but not including this date, e.g., "2024-01-31" or 45321)
+ * @param [parameter1] Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
+ * @param [parameter2] Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
+ * @param [parameter3] Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
+ * @param [parameter4] Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
  * @helpUrl https://github.com/CanKattwinkel/glassnode-excel/
  * @returns Single value or table with Date and metric columns
  */
@@ -123,11 +123,11 @@ export async function METRIC(
   asset: string,
   metric: string,
   startDate: string | number,
-  endDate?: string | number,
-  parameter1?: string,
-  parameter2?: string,
-  parameter3?: string,
-  parameter4?: string
+  endDate: string | number | null = null,
+  parameter1: string | null = null,
+  parameter2: string| null = null,
+  parameter3: string| null = null,
+  parameter4: string| null = null
 ): Promise<string[][]> {
   try {
     
@@ -161,7 +161,7 @@ export async function METRIC(
     console.log('Start date converted:', { startDate, startTimestamp });
     
     let endTimestamp: number | null = null;
-    if (endDate !== undefined) {
+    if (endDate !== null) {
       const endDateResult = parseDate(endDate);
       if (endDateResult.error) {
         console.log('Invalid end date:', endDate, endDateResult.error);

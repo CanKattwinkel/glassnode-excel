@@ -82,6 +82,7 @@ describe('ASSETS function', () => {
         { id: 'ETH' },
         { id: undefined },
         { id: 'ADA' },
+        { id: '' },
       ],
     };
 
@@ -203,7 +204,7 @@ describe('METRIC function', () => {
 
     const startDate = '44562'; // 2022-01-01
     const endDate = '44563';   // 2022-01-02
-    
+
     await METRIC('BTC', '/addresses/active_count', startDate, endDate);
 
     const expectedUrl = '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1640995200&u=1641081600';
@@ -228,7 +229,7 @@ describe('METRIC function', () => {
     // 2024-01-01 = 45292, 2024-01-30 = 45321
     const startDate = '45292'; // 2024-01-01
     const endDate = '45321';   // 2024-01-30
-    
+
     const result = await METRIC('BTC', '/market/price_usd_close', startDate, endDate);
 
     // Verify the result format
@@ -244,7 +245,7 @@ describe('METRIC function', () => {
     expect(mockFetch).toHaveBeenCalledWith(
       '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200&u=1706572800'
     );
-    
+
     // Verify call was made exactly once
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
@@ -258,7 +259,7 @@ describe('METRIC function', () => {
     });
 
     const startDate = '45292'; // 2024-01-01
-    
+
     await METRIC('BTC', '/addresses/active_count', startDate, undefined, 'tier=1', 'currency=USD');
 
     // Verify the API was called with optional parameters
@@ -279,7 +280,7 @@ describe('METRIC function', () => {
     const result = await METRIC('BTC', '/market/price_usd_close', '2024-01-01');
 
     expect(result).toEqual([[45123.45]]);
-    
+
     // Verify the API was called with correct timestamp for 2024-01-01
     expect(mockFetch).toHaveBeenCalledWith(
       '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200'
@@ -329,11 +330,28 @@ describe('METRIC function', () => {
       json: async () => mockResponse,
     });
 
-    const result = await METRIC('BTC', '/market/price_usd_close', '2024-01-01');
+    const result = await METRIC('BTC', '/market/price_usd_close', '2024-01-01', null);
 
     expect(result).toEqual([[45123.45]]);
-    
+
     // Verify the API was called without any optional parameters
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200'
+    );
+  });
+
+  it('should handle null endDate correctly (which is what excel will provide for unset parameters)', async () => {
+    const mockResponse = [{ t: 1704067200, v: 43123.45 }];
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse,
+    });
+
+    const result = await METRIC('BTC', '/market/price_usd_close', '2024-01-01', null);
+    expect(result).toEqual([[43123.45]]);
+
+    // Verify the API was called without the 'u' (until/endDate) parameter
     expect(mockFetch).toHaveBeenCalledWith(
       '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200'
     );
@@ -348,7 +366,7 @@ describe('METRIC function', () => {
     });
 
     const startDate = '45292'; // 2024-01-01
-    
+
     await METRIC('BTC', '/addresses/active_count', startDate, undefined, 'e=binance', 'c=usd', 'network=base', 'miner=FoundryUSAPool');
 
     // Verify the API was called with all 4 optional parameters in correct order
@@ -357,7 +375,7 @@ describe('METRIC function', () => {
     );
   });
 
-  it('should handle mixed optional parameters (some undefined)', async () => {
+  it('should handle mixed optional parameters (some not defined)', async () => {
     const mockResponse = [{ t: 1704067200, v: 100.5 }];
 
     mockFetch.mockResolvedValueOnce({
@@ -366,9 +384,9 @@ describe('METRIC function', () => {
     });
 
     const startDate = '45292'; // 2024-01-01
-    
+
     // Test with parameter1 and parameter3 defined, parameter2 and parameter4 undefined
-    await METRIC('BTC', '/addresses/active_count', startDate, undefined, 'e=binance', undefined, 'network=base', undefined);
+    await METRIC('BTC', '/addresses/active_count', startDate, null, 'e=binance', null, 'network=base', null);
 
     // Verify the API was called with only the defined optional parameters
     expect(mockFetch).toHaveBeenCalledWith(
@@ -385,9 +403,9 @@ describe('METRIC function', () => {
     });
 
     const startDate = '45292'; // 2024-01-01
-    
+
     // Test with one valid parameter and one invalid parameter format
-    await METRIC('BTC', '/addresses/active_count', startDate, undefined, 'e=binance', 'invalidformat', 'network=base');
+    await METRIC('BTC', '/addresses/active_count', startDate, null, 'e=binance', 'invalidformat', 'network=base');
 
     // Verify the API was called with only valid parameters (invalidformat should be ignored)
     expect(mockFetch).toHaveBeenCalledWith(
@@ -404,9 +422,9 @@ describe('METRIC function', () => {
     });
 
     const startDate = '45292'; // 2024-01-01
-    
+
     // Test with empty strings and valid parameters
-    await METRIC('BTC', '/addresses/active_count', startDate, undefined, '', 'c=usd', '', 'miner=FoundryUSAPool');
+    await METRIC('BTC', '/addresses/active_count', startDate, null, '', 'c=usd', '', 'miner=FoundryUSAPool');
 
     // Verify the API was called with only non-empty parameters
     expect(mockFetch).toHaveBeenCalledWith(
