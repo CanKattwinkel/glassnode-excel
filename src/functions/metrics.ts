@@ -34,7 +34,6 @@ export async function METRIC(
       console.log('API key not found');
       return [['Error: API key not configured. Please set your API key in the task pane.']];
     }
-    console.log('API key retrieved successfully');
 
     // Validate required parameters
     if (!asset || !metric || !startDate) {
@@ -55,7 +54,6 @@ export async function METRIC(
       return [['Error: ' + startDateResult.error]];
     }
     const startTimestamp = startDateResult.timestamp;
-    console.log('Start date converted:', { startDate, startTimestamp });
     
     let endTimestamp: number | null = null;
     if (endDate !== null) {
@@ -82,21 +80,17 @@ export async function METRIC(
 
     // Process optional parameters
     const optionalParams = [parameter1, parameter2, parameter3, parameter4].filter(Boolean);
-    console.log('Processing optional parameters:', optionalParams);
     
     for (const param of optionalParams) {
       if (param && typeof param === 'string') {
         const [key, value] = param.split('=');
         if (key && value) {
           params.append(key.trim(), value.trim());
-          console.log('Added parameter:', { key: key.trim(), value: value.trim() });
         } else {
           console.warn('Invalid parameter format, expected key=value:', param);
         }
       }
     }
-
-    console.log('URL parameters built:', params.toString());
 
     // Use proxy path for development, direct API for production
     const isDevelopment = window?.location?.hostname === 'localhost';
@@ -104,11 +98,7 @@ export async function METRIC(
       ? `/api/glassnode/v1/metrics${metric}?${params.toString()}`
       : `https://api.glassnode.com/v1/metrics${metric}?${params.toString()}`;
 
-    console.log('API URL constructed:', { isDevelopment, apiUrl });
-
-    const response = await fetch(apiUrl);
-    console.log('Fetch response received:', { status: response.status, ok: response.ok });
-    
+    const response = await fetch(apiUrl);    
     if (!response.ok) {
       console.log('HTTP error occurred:', response.status);
       if (response.status === 404) {
@@ -121,7 +111,6 @@ export async function METRIC(
     }
 
     const result = await response.json();
-    console.log('Response parsed:', { resultType: typeof result, isArray: Array.isArray(result), length: result?.length, firstItem: result?.[0] });
 
     if (!Array.isArray(result)) {
       console.log('Invalid response format - not an array:', result);
@@ -131,7 +120,6 @@ export async function METRIC(
     // If only one date specified or only one data point returned, return single value
     if (!endDate || result.length === 1) {
       const value = result[0]?.v;
-      console.log('Returning single value:', { endDate: !!endDate, resultLength: result.length, value, firstItem: result[0] });
       return value !== undefined ? [[value]] : [['No data available']];
     }
 
@@ -143,14 +131,6 @@ export async function METRIC(
       new Date(item.t * 1000).toISOString().split('T')[0], // Convert Unix timestamp to YYYY-MM-DD format
       item.v  // Convert value to string
     ]);
-
-    console.log('Returning table format:', { 
-      metricName, 
-      headers, 
-      dataRowsLength: dataRows.length, 
-      firstDataRow: dataRows[0], 
-      lastDataRow: dataRows[dataRows.length - 1] 
-    });
 
     return [headers, ...dataRows];
     
