@@ -1,6 +1,6 @@
 /* global console */
 
-import { getApiKey } from './utils';
+import { getApiKey, getApiUrl } from './utils';
 
 export async function ASSETS(limit: number = null ): Promise<string[][]> {
   try {
@@ -10,11 +10,8 @@ export async function ASSETS(limit: number = null ): Promise<string[][]> {
       return [['Error: API key not configured. Please set your API key in the task pane.']];
     }
     
-    // Use proxy path for development, direct API for production
-    const isDevelopment = window?.location?.hostname === 'localhost';
-    const apiUrl = isDevelopment 
-      ? `/api/glassnode/v1/metadata/assets?api_key=${apiKey}`
-      : `https://api.glassnode.com/v1/metadata/assets?api_key=${apiKey}`;
+    // Get the appropriate API URL for the environment
+    const apiUrl = `${getApiUrl()}/v1/metadata/assets?api_key=${apiKey}`;
     
     const response = await fetch(apiUrl, {
       headers: {

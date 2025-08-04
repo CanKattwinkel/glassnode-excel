@@ -54,3 +54,17 @@ export function parseDate(dateInput: string | number): { timestamp: number; erro
     error: 'Invalid date format. Expected YYYY-MM-DD or Excel serial number.' 
   };
 }
+
+/**
+ * Helper function to get the appropriate API base URL based on environment
+ * @returns The base API URL for the current environment
+ */
+export function getApiUrl(): string {
+  const isDevelopment = window?.location?.hostname === 'localhost';
+  
+  if (isDevelopment) {
+    return '/api/glassnode';
+  } else {
+    return 'https://api.glassnode.com';
+  }
+}

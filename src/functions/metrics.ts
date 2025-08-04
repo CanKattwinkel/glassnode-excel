@@ -1,6 +1,6 @@
 /* global console */
 
-import { getApiKey, parseDate } from './utils';
+import { getApiKey, parseDate, getApiUrl } from './utils';
 
 export async function METRIC(
   asset: string,
@@ -79,10 +79,7 @@ export async function METRIC(
     }
 
     // Use proxy path for development, direct API for production
-    const isDevelopment = window?.location?.hostname === 'localhost';
-    const apiUrl = isDevelopment
-      ? `/api/glassnode/v1/metrics${metric}?${params.toString()}`
-      : `https://api.glassnode.com/v1/metrics${metric}?${params.toString()}`;
+    const apiUrl = `${getApiUrl()}/v1/metrics${metric}?${params.toString()}`;
 
     const response = await fetch(apiUrl, {
       headers: {
