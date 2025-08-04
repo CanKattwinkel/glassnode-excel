@@ -79,9 +79,12 @@ export async function ASSETS(limit: number = null ): Promise<string[][]> {
     const response = await fetch(apiUrl);
     
     if (!response.ok) {
+      console.log('HTTP error occurred:', response.status);
+      if (response.status === 429) {
+        throw new Error('429 rate limit exceeded - too many requests to the Glassnode API');
+      }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    console.log("limit", limit);
     const result = await response.json();
     
     if (!result.data || !Array.isArray(result.data)) {
@@ -93,7 +96,6 @@ export async function ASSETS(limit: number = null ): Promise<string[][]> {
       .slice(0, limit ?? 50_000)
       .map(asset => asset.id)
       .filter(id => id); // Filter out any undefined/null/"" IDs
-        console.log("response", assetIds.map(id => [id]));
 
     // Return as 2D array for Excel (each ID in its own row)
     return assetIds.map(id => [id]);
@@ -216,6 +218,9 @@ export async function METRIC(
       console.log('HTTP error occurred:', response.status);
       if (response.status === 404) {
         throw new Error('404 metric not found - correct metric endpoint selected?');
+      }
+      if (response.status === 429) {
+        throw new Error('429 rate limit exceeded - too many requests to the Glassnode API');
       }
       throw new Error(`HTTP error! status: ${response.status}`);
     }

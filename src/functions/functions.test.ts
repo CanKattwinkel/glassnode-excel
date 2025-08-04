@@ -96,6 +96,22 @@ describe('ASSETS function', () => {
     expect(result).toEqual([['BTC'], ['ETH'], ['ADA']]);
     expect(result).toHaveLength(3);
   });
+
+  describe('Status code handling', () => {
+        it('should return specific error message for 429 responses', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+      });
+
+      const result = await ASSETS();
+
+      expect(result).toEqual([['Error: 429 rate limit exceeded - too many requests to the Glassnode API']]);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/glassnode/v1/metadata/assets')
+      );
+    });
+  });
 });
 
 describe('METRIC function', () => {
@@ -178,20 +194,6 @@ describe('METRIC function', () => {
 
     expect(result).toEqual([['Error: Invalid path, make sure to use API endpoint notation like /addresses/active_count']]);
     expect(mockFetch).not.toHaveBeenCalled();
-  });
-
-  it('should return specific error message for 404 responses', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 404,
-    });
-
-    const result = await METRIC('BTC', '/addresses/active_count', '44562');
-
-    expect(result).toEqual([['Error: 404 metric not found - correct metric endpoint selected?']]);
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/glassnode/v1/metrics/addresses/active_count')
-    );
   });
 
   it('should construct correct API URL with parameters', async () => {
@@ -430,5 +432,35 @@ describe('METRIC function', () => {
     expect(mockFetch).toHaveBeenCalledWith(
       '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&c=usd&miner=FoundryUSAPool'
     );
+  });
+
+  describe('Status code handling', () => {
+    it('should return specific error message for 404 responses', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      });
+
+      const result = await METRIC('BTC', '/addresses/active_count', '44562');
+
+      expect(result).toEqual([['Error: 404 metric not found - correct metric endpoint selected?']]);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/glassnode/v1/metrics/addresses/active_count')
+      );
+    });
+
+    it('should return specific error message for 429 responses', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+      });
+
+      const result = await METRIC('BTC', '/addresses/active_count', '44562');
+
+      expect(result).toEqual([['Error: 429 rate limit exceeded - too many requests to the Glassnode API']]);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/glassnode/v1/metrics/addresses/active_count')
+      );
+    });
   });
 });
