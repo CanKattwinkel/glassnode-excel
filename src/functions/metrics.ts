@@ -1,21 +1,7 @@
-/* global console, CustomFunctions */
+/* global console */
 
 import { getApiKey, parseDate } from './utils';
 
-/**
- * Fetches metric data from Glassnode API
- * @customfunction
- * @param asset Asset ID (e.g., "BTC")
- * @param metric Metric path as used in the API (e.g., "/addresses/active_count" - starting with /)
- * @param startDate Start date as Excel serial number or YYYY-MM-DD string (required, e.g., "2024-01-01" or 45292)
- * @param [endDate] End date as Excel serial number or YYYY-MM-DD string (optional, exclusive - data up to but not including this date, e.g., "2024-01-31" or 45321)
- * @param [parameter1] Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
- * @param [parameter2] Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
- * @param [parameter3] Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
- * @param [parameter4] Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
- * @helpUrl https://github.com/CanKattwinkel/glassnode-excel/
- * @returns Single value or table with Date and metric columns
- */
 export async function METRIC(
   asset: string,
   metric: string,

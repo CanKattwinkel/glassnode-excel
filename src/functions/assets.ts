@@ -1,14 +1,7 @@
-/* global console, CustomFunctions */
+/* global console */
 
 import { getApiKey } from './utils';
 
-/**
- * Fetches asset IDs from Glassnode API
- * @customfunction
- * @param {number} [limit] Maximum number of assets to return
- * @helpUrl https://github.com/CanKattwinkel/glassnode-excel/
- * @returns Array of asset IDs
- */
 export async function ASSETS(limit: number = null ): Promise<string[][]> {
   try {
     // Get API key from settings
