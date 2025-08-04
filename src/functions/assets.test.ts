@@ -28,7 +28,8 @@ describe('ASSETS function', () => {
 
     expect(result).toEqual([['BTC'], ['ETH']]);
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metadata/assets?api_key=test-api-key'
+      '/api/glassnode/v1/metadata/assets?api_key=test-api-key',
+      expect.any(Object)
     );
   });
 
@@ -108,7 +109,8 @@ describe('ASSETS function', () => {
 
       expect(result).toEqual([['Error: 429 rate limit exceeded - too many requests to the Glassnode API']]);
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/glassnode/v1/metadata/assets')
+        expect.stringContaining('/api/glassnode/v1/metadata/assets'),
+        expect.any(Object)
       );
     });
   });

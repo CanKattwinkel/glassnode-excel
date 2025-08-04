@@ -26,10 +26,12 @@ describe('METRIC function', () => {
 
     expect(result).toEqual([[100.5]]);
     expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/glassnode/v1/metrics/addresses/active_count')
+      expect.stringContaining('/api/glassnode/v1/metrics/addresses/active_count'),
+      expect.any(Object)
     );
     expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('a=BTC')
+      expect.stringContaining('a=BTC'),
+      expect.any(Object)
     );
   });
 
@@ -100,7 +102,7 @@ describe('METRIC function', () => {
     await METRIC('BTC', '/addresses/active_count', startDate, endDate);
 
     const expectedUrl = '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1640995200&u=1641081600';
-    expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
+    expect(mockFetch).toHaveBeenCalledWith(expectedUrl, expect.any(Object));
   });
 
   it('should fetch BTC price data for January 2024 date range', async () => {
@@ -135,7 +137,8 @@ describe('METRIC function', () => {
 
     // Verify the API was called with correct parameters
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200&u=1706572800'
+      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200&u=1706572800',
+      expect.any(Object)
     );
 
     // Verify call was made exactly once
@@ -156,7 +159,8 @@ describe('METRIC function', () => {
 
     // Verify the API was called with optional parameters
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&tier=1&currency=USD'
+      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&tier=1&currency=USD',
+      expect.any(Object)
     );
   });
 
@@ -175,7 +179,8 @@ describe('METRIC function', () => {
 
     // Verify the API was called with correct timestamp for 2024-01-01
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200'
+      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200',
+      expect.any(Object)
     );
   });
 
@@ -203,7 +208,8 @@ describe('METRIC function', () => {
 
     // Verify the API was called with correct timestamps
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200&u=1706572800'
+      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200&u=1706572800',
+      expect.any(Object)
     );
   });
 
@@ -228,7 +234,8 @@ describe('METRIC function', () => {
 
     // Verify the API was called without any optional parameters
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200'
+      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200',
+      expect.any(Object)
     );
   });
 
@@ -245,7 +252,8 @@ describe('METRIC function', () => {
 
     // Verify the API was called without the 'u' (until/endDate) parameter
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200'
+      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200',
+      expect.any(Object)
     );
   });
 
@@ -263,7 +271,8 @@ describe('METRIC function', () => {
 
     // Verify the API was called with all 4 optional parameters in correct order
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&e=binance&c=usd&network=base&miner=FoundryUSAPool'
+      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&e=binance&c=usd&network=base&miner=FoundryUSAPool',
+      expect.any(Object)
     );
   });
 
@@ -282,7 +291,8 @@ describe('METRIC function', () => {
 
     // Verify the API was called with only the defined optional parameters
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&e=binance&network=base'
+      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&e=binance&network=base',
+      expect.any(Object)
     );
   });
 
@@ -301,7 +311,8 @@ describe('METRIC function', () => {
 
     // Verify the API was called with only valid parameters (invalidformat should be ignored)
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&e=binance&network=base'
+      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&e=binance&network=base',
+      expect.any(Object)
     );
   });
 
@@ -320,7 +331,8 @@ describe('METRIC function', () => {
 
     // Verify the API was called with only non-empty parameters
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&c=usd&miner=FoundryUSAPool'
+      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&c=usd&miner=FoundryUSAPool',
+      expect.any(Object)
     );
   });
 
@@ -335,7 +347,8 @@ describe('METRIC function', () => {
 
       expect(result).toEqual([['Error: 404 metric not found - correct metric endpoint selected?']]);
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/glassnode/v1/metrics/addresses/active_count')
+        expect.stringContaining('/api/glassnode/v1/metrics/addresses/active_count'),
+        expect.any(Object)
       );
     });
 
@@ -349,7 +362,8 @@ describe('METRIC function', () => {
 
       expect(result).toEqual([['Error: 429 rate limit exceeded - too many requests to the Glassnode API']]);
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/glassnode/v1/metrics/addresses/active_count')
+        expect.stringContaining('/api/glassnode/v1/metrics/addresses/active_count'),
+        expect.anything()
       );
     });
   });
