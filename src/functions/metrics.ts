@@ -84,7 +84,12 @@ export async function METRIC(
       ? `/api/glassnode/v1/metrics${metric}?${params.toString()}`
       : `https://api.glassnode.com/v1/metrics${metric}?${params.toString()}`;
 
-    const response = await fetch(apiUrl);    
+    const response = await fetch(apiUrl, {
+      headers: {
+        "X-Requested-By": "Excel-Addin",
+        "User-Agent": "Excel-Addin/1.0"
+      }
+    });    
     if (!response.ok) {
       console.log('HTTP error occurred:', response.status);
       if (response.status === 404) {

@@ -16,7 +16,12 @@ export async function ASSETS(limit: number = null ): Promise<string[][]> {
       ? `/api/glassnode/v1/metadata/assets?api_key=${apiKey}`
       : `https://api.glassnode.com/v1/metadata/assets?api_key=${apiKey}`;
     
-    const response = await fetch(apiUrl);
+    const response = await fetch(apiUrl, {
+      headers: {
+        "X-Requested-By": "Excel-Addin",
+        "User-Agent": "Excel-Addin/1.0"
+      }
+    });
     
     if (!response.ok) {
       console.log('HTTP error occurred:', response.status);
