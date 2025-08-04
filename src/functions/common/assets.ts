@@ -1,8 +1,11 @@
 /* global console */
 
+import axios from 'axios';
 import { getApiKey, getApiUrl } from './utils';
+import { apiClient } from './api';
+// Create cached axios instance with localStorage
 
-export async function ASSETS(limit: number = null ): Promise<string[][]> {
+export async function ASSETS(limit: number = null): Promise<string[][]> {
   try {
     // Get API key from settings
     const apiKey = await getApiKey();
@@ -10,31 +13,25 @@ export async function ASSETS(limit: number = null ): Promise<string[][]> {
       return [['Error: API key not configured. Please set your API key in the task pane.']];
     }
     
-    // Get the appropriate API URL for the environment
-    const apiUrl = `${getApiUrl()}/v1/metadata/assets?api_key=${apiKey}`;
-    
-    const response = await fetch(apiUrl, {
+    const cacheId = `assets_cache`;
+    const response = await apiClient.get(`${getApiUrl()}/v1/metadata/assets`, {
+      params: { api_key: apiKey },
       headers: {
         "X-Requested-By": "Excel-Addin",
         "User-Agent": "Excel-Addin/1.0"
-      }
+      },
+      cache: {
+        ttl: 60 * 60 * 1000, // 1 hour
+      },
+      id: cacheId // Custom cache key
     });
     
-    if (!response.ok) {
-      console.log('HTTP error occurred:', response.status);
-      if (response.status === 429) {
-        throw new Error('429 rate limit exceeded - too many requests to the Glassnode API');
-      }
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const result = await response.json();
-    
-    if (!result.data || !Array.isArray(result.data)) {
+    if (!response.data.data || !Array.isArray(response.data.data)) {
       throw new Error('Invalid response format');
     }
     
     // Extract IDs and limit the results
-    const assetIds = result.data
+    const assetIds = response.data.data
       .slice(0, limit ?? 50_000)
       .map(asset => asset.id)
       .filter(id => id); // Filter out any undefined/null/"" IDs
@@ -44,6 +41,15 @@ export async function ASSETS(limit: number = null ): Promise<string[][]> {
     
   } catch (error) {
     console.error('Error fetching asset data:', error);
+    
+    // Handle axios-specific errors
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 429) {
+        return [['Error: 429 rate limit exceeded - too many requests to the Glassnode API']];
+      }
+      return [['Error: HTTP error! status: ' + (error.response?.status || 'unknown')]];
+    }
+    
     // Return error message in Excel-compatible format
     return [['Error: ' + (error instanceof Error ? error.message : 'Unknown error')]];
   }

@@ -1,13 +1,30 @@
 import { METRIC } from './metrics';
-
-// Mock the fetch function
-const mockFetch = jest.fn();
-global.fetch = mockFetch;
+import { apiClient } from './api';
+import MockAdapter from 'axios-mock-adapter';
 
 describe('METRIC function', () => {
+  let mock: MockAdapter;
+
   beforeEach(() => {
-    jest.clearAllMocks();
+    // Clear localStorage before each test
+    if (typeof localStorage !== 'undefined') {
+      localStorage.clear();
+    }
+    
+    // Create MockAdapter for the cached axios instance
+    mock = new MockAdapter(apiClient);
     (global as any).OfficeRuntime.storage.getItem.mockReturnValue('test-api-key');
+    
+    // Clear the cache storage before each test
+    try {
+      (apiClient as any).storage?.clear?.();
+    } catch (e) {
+      // Ignore errors if storage doesn't exist
+    }
+  });
+
+  afterEach(() => {
+    mock.restore();
   });
 
   it('should return single value for single data point', async () => {
@@ -15,23 +32,19 @@ describe('METRIC function', () => {
       { t: 1640995200, v: 100.5 }
     ];
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
 
     // Excel date serial number for 2022-01-01
     const excelDate = '44562';
     const result = await METRIC('BTC', '/addresses/active_count', excelDate);
 
     expect(result).toEqual([[100.5]]);
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/glassnode/v1/metrics/addresses/active_count'),
-      expect.any(Object)
-    );
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('a=BTC'),
-      expect.any(Object)
+    expect(mock.history.get).toHaveLength(1);
+    expect(mock.history.get[0].params).toEqual(
+      expect.objectContaining({
+        api_key: 'test-api-key',
+        a: 'BTC'
+      })
     );
   });
 
@@ -41,10 +54,7 @@ describe('METRIC function', () => {
       { t: 1641081600, v: 102.3 },
     ];
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
 
     // Excel date serial numbers for 2022-01-01 and 2022-01-02
     const startDate = '44562';
@@ -64,60 +74,79 @@ describe('METRIC function', () => {
     const result = await METRIC('BTC', '/addresses/active_count', '44562');
 
     expect(result).toEqual([['Error: API key not configured. Please set your API key in the task pane.']]);
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mock.history.get).toHaveLength(0);
   });
 
   it('should return error when required parameters are missing', async () => {
     const result = await METRIC('', '/addresses/active_count', '44562');
 
     expect(result).toEqual([['Error: asset, metric, and startDate are required parameters']]);
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mock.history.get).toHaveLength(0);
   });
 
   it('should return error when date format is invalid', async () => {
     const result = await METRIC('BTC', '/addresses/active_count', 'invalid-date');
 
     expect(result).toEqual([['Error: Invalid date format. Expected YYYY-MM-DD or Excel serial number.']]);
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mock.history.get).toHaveLength(0);
   });
 
   it('should return error when metric path does not start with /', async () => {
     const result = await METRIC('BTC', 'addresses/active_count', '44562');
 
     expect(result).toEqual([['Error: Invalid path, make sure to use API endpoint notation like /addresses/active_count']]);
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mock.history.get).toHaveLength(0);
+  });
+
+  it('should return error when required parameters are missing', async () => {
+    const result = await METRIC('', '/addresses/active_count', '44562');
+
+    expect(result).toEqual([['Error: asset, metric, and startDate are required parameters']]);
+    expect(mock.history.get).toHaveLength(0);
+  });
+
+  it('should return error when date format is invalid', async () => {
+    const result = await METRIC('BTC', '/addresses/active_count', 'invalid-date');
+
+    expect(result).toEqual([['Error: Invalid date format. Expected YYYY-MM-DD or Excel serial number.']]);
+    expect(mock.history.get).toHaveLength(0);
+  });
+
+  it('should return error when metric path does not start with /', async () => {
+    const result = await METRIC('BTC', 'addresses/active_count', '44562');
+
+    expect(result).toEqual([['Error: Invalid path, make sure to use API endpoint notation like /addresses/active_count']]);
+    expect(mock.history.get).toHaveLength(0);
   });
 
   it('should construct correct API URL with parameters', async () => {
     const mockResponse = [{ t: 1640995200, v: 100.5 }];
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
 
     const startDate = '44562'; // 2022-01-01
     const endDate = '44563';   // 2022-01-02
 
     await METRIC('BTC', '/addresses/active_count', startDate, endDate);
 
-    const expectedUrl = '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1640995200&u=1641081600';
-    expect(mockFetch).toHaveBeenCalledWith(expectedUrl, expect.any(Object));
+    expect(mock.history.get).toHaveLength(1);
+    expect(mock.history.get[0].params).toEqual(
+      expect.objectContaining({
+        api_key: 'test-api-key',
+        a: 'BTC',
+        i: '24h',
+        s: '1640995200',
+        u: '1641081600'
+      })
+    );
   });
 
   it('should fetch BTC price data for January 2024 date range', async () => {
     // Mock response data for BTC price from 2024-01-01 to 2024-01-30
     const mockResponse = [
-      { t: 1704067200, v: 42167.84 }, // 2024-01-01
-      { t: 1704153600, v: 44172.56 }, // 2024-01-02
-      { t: 1704240000, v: 44294.32 }, // 2024-01-03
-      { t: 1706572800, v: 43156.78 }, // 2024-01-30
-    ];
+      { t: 1704067200, v: 42167.84 },      { t: 1704153600, v: 44172.56 },      { t: 1704240000, v: 44294.32 },      { t: 1706572800, v: 43156.78 },    ];
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    mock.onGet('/api/glassnode/v1/metrics/market/price_usd_close').reply(200, mockResponse);
 
     // Excel date serial numbers for 2024-01-01 and 2024-01-30
     // 2024-01-01 = 45292, 2024-01-30 = 45321
@@ -136,41 +165,45 @@ describe('METRIC function', () => {
     ]);
 
     // Verify the API was called with correct parameters
-    expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200&u=1706572800',
-      expect.any(Object)
+    expect(mock.history.get).toHaveLength(1);
+    expect(mock.history.get[0].params).toEqual(
+      expect.objectContaining({
+        api_key: 'test-api-key',
+        a: 'BTC',
+        i: '24h',
+        s: '1704067200',
+        u: '1706572800'
+      })
     );
-
-    // Verify call was made exactly once
-    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
   it('should handle optional parameters correctly', async () => {
     const mockResponse = [{ t: 1704067200, v: 100.5 }];
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
 
     const startDate = '45292'; // 2024-01-01
 
     await METRIC('BTC', '/addresses/active_count', startDate, undefined, 'tier=1', 'currency=USD');
 
     // Verify the API was called with optional parameters
-    expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&tier=1&currency=USD',
-      expect.any(Object)
+    expect(mock.history.get).toHaveLength(1);
+    expect(mock.history.get[0].params).toEqual(
+      expect.objectContaining({
+        api_key: 'test-api-key',
+        a: 'BTC',
+        i: '24h',
+        s: '1704067200',
+        tier: '1',
+        currency: 'USD'
+      })
     );
   });
 
   it('should handle date strings (YYYY-MM-DD format) for single date', async () => {
     const mockResponse = [{ t: 1704067200, v: 45123.45 }];
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    mock.onGet('/api/glassnode/v1/metrics/market/price_usd_close').reply(200, mockResponse);
 
     // Test with date string instead of Excel serial number
     const result = await METRIC('BTC', '/market/price_usd_close', '2024-01-01');
@@ -178,23 +211,22 @@ describe('METRIC function', () => {
     expect(result).toEqual([[45123.45]]);
 
     // Verify the API was called with correct timestamp for 2024-01-01
-    expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200',
-      expect.any(Object)
+    expect(mock.history.get).toHaveLength(1);
+    expect(mock.history.get[0].params).toEqual(
+      expect.objectContaining({
+        api_key: 'test-api-key',
+        a: 'BTC',
+        i: '24h',
+        s: '1704067200'
+      })
     );
   });
 
   it('should handle date strings (YYYY-MM-DD format) for date range', async () => {
     const mockResponse = [
-      { t: 1704067200, v: 42167.84 }, // 2024-01-01
-      { t: 1704153600, v: 44172.56 }, // 2024-01-02
-      { t: 1706572800, v: 43156.78 }, // 2024-01-30
-    ];
+      { t: 1704067200, v: 42167.84 },      { t: 1704153600, v: 44172.56 },      { t: 1706572800, v: 43156.78 },    ];
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    mock.onGet('/api/glassnode/v1/metrics/market/price_usd_close').reply(200, mockResponse);
 
     // Test with date strings instead of Excel serial numbers
     const result = await METRIC('BTC', '/market/price_usd_close', '2024-01-01', '2024-01-30');
@@ -207,9 +239,15 @@ describe('METRIC function', () => {
     ]);
 
     // Verify the API was called with correct timestamps
-    expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200&u=1706572800',
-      expect.any(Object)
+    expect(mock.history.get).toHaveLength(1);
+    expect(mock.history.get[0].params).toEqual(
+      expect.objectContaining({
+        api_key: 'test-api-key',
+        a: 'BTC',
+        i: '24h',
+        s: '1704067200',
+        u: '1706572800'
+      })
     );
   });
 
@@ -217,72 +255,81 @@ describe('METRIC function', () => {
     const result = await METRIC('BTC', '/market/price_usd_close', 'invalid-date-format');
 
     expect(result).toEqual([['Error: Invalid date format. Expected YYYY-MM-DD or Excel serial number.']]);
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mock.history.get).toHaveLength(0);
   });
 
   it('should work without any optional parameters', async () => {
     const mockResponse = [{ t: 1704067200, v: 45123.45 }];
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    mock.onGet('/api/glassnode/v1/metrics/market/price_usd_close').reply(200, mockResponse);
 
     const result = await METRIC('BTC', '/market/price_usd_close', '2024-01-01', null);
 
     expect(result).toEqual([[45123.45]]);
 
     // Verify the API was called without any optional parameters
-    expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200',
-      expect.any(Object)
+    expect(mock.history.get).toHaveLength(1);
+    expect(mock.history.get[0].params).toEqual(
+      expect.objectContaining({
+        api_key: 'test-api-key',
+        a: 'BTC',
+        i: '24h',
+        s: '1704067200'
+      })
     );
   });
 
   it('should handle null endDate correctly (which is what excel will provide for unset parameters)', async () => {
     const mockResponse = [{ t: 1704067200, v: 43123.45 }];
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    mock.onGet('/api/glassnode/v1/metrics/market/price_usd_close').reply(200, mockResponse);
 
     const result = await METRIC('BTC', '/market/price_usd_close', '2024-01-01', null);
     expect(result).toEqual([[43123.45]]);
 
     // Verify the API was called without the 'u' (until/endDate) parameter
-    expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/market/price_usd_close?api_key=test-api-key&a=BTC&i=24h&s=1704067200',
-      expect.any(Object)
+    expect(mock.history.get).toHaveLength(1);
+    expect(mock.history.get[0].params).toEqual(
+      expect.objectContaining({
+        api_key: 'test-api-key',
+        a: 'BTC',
+        i: '24h',
+        s: '1704067200'
+      })
     );
+    // Verify 'u' parameter is not present
+    expect(mock.history.get[0].params).not.toHaveProperty('u');
   });
 
   it('should handle all 4 optional parameters correctly', async () => {
     const mockResponse = [{ t: 1704067200, v: 100.5 }];
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
 
     const startDate = '45292'; // 2024-01-01
 
     await METRIC('BTC', '/addresses/active_count', startDate, undefined, 'e=binance', 'c=usd', 'network=base', 'miner=FoundryUSAPool');
 
     // Verify the API was called with all 4 optional parameters in correct order
-    expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&e=binance&c=usd&network=base&miner=FoundryUSAPool',
-      expect.any(Object)
+    expect(mock.history.get).toHaveLength(1);
+    expect(mock.history.get[0].params).toEqual(
+      expect.objectContaining({
+        api_key: 'test-api-key',
+        a: 'BTC',
+        i: '24h',
+        s: '1704067200',
+        e: 'binance',
+        c: 'usd',
+        network: 'base',
+        miner: 'FoundryUSAPool'
+      })
     );
   });
 
   it('should handle mixed optional parameters (some not defined)', async () => {
     const mockResponse = [{ t: 1704067200, v: 100.5 }];
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
 
     const startDate = '45292'; // 2024-01-01
 
@@ -290,19 +337,23 @@ describe('METRIC function', () => {
     await METRIC('BTC', '/addresses/active_count', startDate, null, 'e=binance', null, 'network=base', null);
 
     // Verify the API was called with only the defined optional parameters
-    expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&e=binance&network=base',
-      expect.any(Object)
+    expect(mock.history.get).toHaveLength(1);
+    expect(mock.history.get[0].params).toEqual(
+      expect.objectContaining({
+        api_key: 'test-api-key',
+        a: 'BTC',
+        i: '24h',
+        s: '1704067200',
+        e: 'binance',
+        network: 'base'
+      })
     );
   });
 
   it('should ignore invalid parameter format (missing equals sign)', async () => {
     const mockResponse = [{ t: 1704067200, v: 100.5 }];
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
 
     const startDate = '45292'; // 2024-01-01
 
@@ -310,19 +361,23 @@ describe('METRIC function', () => {
     await METRIC('BTC', '/addresses/active_count', startDate, null, 'e=binance', 'invalidformat', 'network=base');
 
     // Verify the API was called with only valid parameters (invalidformat should be ignored)
-    expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&e=binance&network=base',
-      expect.any(Object)
+    expect(mock.history.get).toHaveLength(1);
+    expect(mock.history.get[0].params).toEqual(
+      expect.objectContaining({
+        api_key: 'test-api-key',
+        a: 'BTC',
+        i: '24h',
+        s: '1704067200',
+        e: 'binance',
+        network: 'base'
+      })
     );
   });
 
   it('should handle empty string parameters', async () => {
     const mockResponse = [{ t: 1704067200, v: 100.5 }];
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
+    mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
 
     const startDate = '45292'; // 2024-01-01
 
@@ -330,41 +385,36 @@ describe('METRIC function', () => {
     await METRIC('BTC', '/addresses/active_count', startDate, null, '', 'c=usd', '', 'miner=FoundryUSAPool');
 
     // Verify the API was called with only non-empty parameters
-    expect(mockFetch).toHaveBeenCalledWith(
-      '/api/glassnode/v1/metrics/addresses/active_count?api_key=test-api-key&a=BTC&i=24h&s=1704067200&c=usd&miner=FoundryUSAPool',
-      expect.any(Object)
+    expect(mock.history.get).toHaveLength(1);
+    expect(mock.history.get[0].params).toEqual(
+      expect.objectContaining({
+        api_key: 'test-api-key',
+        a: 'BTC',
+        i: '24h',
+        s: '1704067200',
+        c: 'usd',
+        miner: 'FoundryUSAPool'
+      })
     );
   });
 
   describe('Status code handling', () => {
     it('should return specific error message for 404 responses', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-      });
+      mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(404);
 
       const result = await METRIC('BTC', '/addresses/active_count', '44562');
 
       expect(result).toEqual([['Error: 404 metric not found - correct metric endpoint selected?']]);
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/glassnode/v1/metrics/addresses/active_count'),
-        expect.any(Object)
-      );
+      expect(mock.history.get).toHaveLength(1);
     });
 
     it('should return specific error message for 429 responses', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 429,
-      });
+      mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(429);
 
       const result = await METRIC('BTC', '/addresses/active_count', '44562');
 
       expect(result).toEqual([['Error: 429 rate limit exceeded - too many requests to the Glassnode API']]);
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/glassnode/v1/metrics/addresses/active_count'),
-        expect.anything()
-      );
+      expect(mock.history.get).toHaveLength(1);
     });
   });
 });

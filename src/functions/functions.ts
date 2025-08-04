@@ -1,7 +1,7 @@
 ﻿/* global console, CustomFunctions, OfficeRuntime */
 
-import { ASSETS as ASSETS_IMPL } from './assets';
-import { METRIC as METRIC_IMPL } from './metrics';
+import { ASSETS as ASSETS_IMPL } from './common/assets';
+import { METRIC as METRIC_IMPL } from './common/metrics';
 
 /**
  * Fetches asset IDs from Glassnode API

@@ -1,5 +1,7 @@
 /* global console */
 
+import axios from 'axios';
+import { apiClient } from './api';
 import { getApiKey, parseDate, getApiUrl } from './utils';
 
 export async function METRIC(
@@ -79,35 +81,27 @@ export async function METRIC(
     }
 
     // Use proxy path for development, direct API for production
-    const apiUrl = `${getApiUrl()}/v1/metrics${metric}?${params.toString()}`;
+    const apiUrl = `${getApiUrl()}/v1/metrics${metric}`;
 
-    const response = await fetch(apiUrl, {
+    const response = await apiClient.get(apiUrl, {
+      params: Object.fromEntries(params),
       headers: {
         "X-Requested-By": "Excel-Addin",
         "User-Agent": "Excel-Addin/1.0"
-      }
+      },
+      cache: {
+        ttl: 3 * 60 * 1000, // 3 min
+      },
     });    
-    if (!response.ok) {
-      console.log('HTTP error occurred:', response.status);
-      if (response.status === 404) {
-        throw new Error('404 metric not found - correct metric endpoint selected?');
-      }
-      if (response.status === 429) {
-        throw new Error('429 rate limit exceeded - too many requests to the Glassnode API');
-      }
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-
-    if (!Array.isArray(result)) {
-      console.log('Invalid response format - not an array:', result);
+    
+    if (!response.data || !Array.isArray(response.data)) {
+      console.log('Invalid response format - not an array:', response.data);
       throw new Error('Invalid response format');
     }
     
     // If only one date specified or only one data point returned, return single value
-    if (!endDate || result.length === 1) {
-      const value = result[0]?.v;
+    if (!endDate || response.data.length === 1) {
+      const value = response.data[0]?.v;
       return value !== undefined ? [[value]] : [['No data available']];
     }
 
@@ -115,7 +109,7 @@ export async function METRIC(
     const metricName = metric.split('/').pop()?.replace(/_/g, '.') || 'value';
     const headers = ['Date', metricName];
     
-    const dataRows = result.map(item => [
+    const dataRows = response.data.map(item => [
       new Date(item.t * 1000).toISOString().split('T')[0], // Convert Unix timestamp to YYYY-MM-DD format
       item.v  // Convert value to string
     ]);
@@ -129,6 +123,18 @@ export async function METRIC(
       stack: error instanceof Error ? error.stack : undefined,
       errorType: typeof error
     });
+    
+    // Handle axios-specific errors
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 404) {
+        return [['Error: 404 metric not found - correct metric endpoint selected?']];
+      }
+      if (error.response?.status === 429) {
+        return [['Error: 429 rate limit exceeded - too many requests to the Glassnode API']];
+      }
+      return [['Error: HTTP error! status: ' + (error.response?.status || 'unknown')]];
+    }
+    
     // Return error message in Excel-compatible format
     return [['Error: ' + (error instanceof Error ? error.message : 'Unknown error')]];
   }
