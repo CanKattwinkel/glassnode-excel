@@ -59,7 +59,8 @@ export async function METRIC(
       api_key: apiKey,
       a: asset,
       i: '24h',
-      s: startTimestamp.toString()
+      s: startTimestamp.toString(),
+      source: "excel-add-in"
     });
 
     if (endTimestamp) {
@@ -82,16 +83,26 @@ export async function METRIC(
 
     // Use proxy path for development, direct API for production
     const apiUrl = `${getApiUrl()}/v1/metrics${metric}`;
+    const rawParams = Object.fromEntries(params.entries());
+    const { source, api_key, ...filteredParams } = rawParams;
+    let cacheIds = {...filteredParams, metric };
+    const sorted = Object.keys(cacheIds)
+        .sort()
+        .reduce((obj, key) => {
+          obj[key] = cacheIds[key];
+          return obj;
+        }, {});
 
+    const cacheId = `metrics-${JSON.stringify(sorted)}`;
     const response = await apiClient.get(apiUrl, {
-      params: Object.fromEntries(params),
-      headers: {
-        "X-Requested-By": "Excel-Addin",
-        "User-Agent": "Excel-Addin/1.0"
+      params: {
+        ...Object.fromEntries(params),
+        source: "excel-add-in"
       },
       cache: {
         ttl: 3 * 60 * 1000, // 3 min
       },
+      id: cacheId
     });    
     
     if (!response.data || !Array.isArray(response.data)) {

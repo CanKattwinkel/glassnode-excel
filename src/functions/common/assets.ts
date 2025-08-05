@@ -15,15 +15,14 @@ export async function ASSETS(limit: number = null): Promise<string[][]> {
     
     const cacheId = `assets_cache`;
     const response = await apiClient.get(`${getApiUrl()}/v1/metadata/assets`, {
-      params: { api_key: apiKey },
-      headers: {
-        "X-Requested-By": "Excel-Addin",
-        "User-Agent": "Excel-Addin/1.0"
+      params: { 
+        api_key: apiKey,
+        source: "excel-add-in"
       },
       cache: {
         ttl: 60 * 60 * 1000, // 1 hour
       },
-      id: cacheId // Custom cache key
+      id: cacheId
     });
     
     if (!response.data.data || !Array.isArray(response.data.data)) {

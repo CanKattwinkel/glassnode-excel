@@ -42,7 +42,10 @@ describe('ASSETS function', () => {
 
     expect(result).toEqual([['BTC'], ['ETH']]);
     expect(mock.history.get).toHaveLength(1);
-    expect(mock.history.get[0].params).toEqual({ api_key: 'test-api-key' });
+    expect(mock.history.get[0].params).toEqual({ 
+      api_key: 'test-api-key',
+      source: 'excel-add-in'
+    });
   });
 
   it('should return error when API key is not configured', async () => {
