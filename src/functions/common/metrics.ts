@@ -55,16 +55,16 @@ export async function METRIC(
     }
 
     // Build URL parameters
-    const params = new URLSearchParams({
+    const params = {
       api_key: apiKey,
       a: asset,
       i: '24h',
       s: startTimestamp.toString(),
       source: "excel-add-in"
-    });
+    };
 
     if (endTimestamp) {
-      params.append('u', endTimestamp.toString());
+      params['u'] = endTimestamp.toString();
     }
 
     // Process optional parameters
@@ -74,7 +74,7 @@ export async function METRIC(
       if (param && typeof param === 'string') {
         const [key, value] = param.split('=');
         if (key && value) {
-          params.append(key.trim(), value.trim());
+          params[key.trim()] = value.trim();
         } else {
           console.warn('Invalid parameter format, expected key=value:', param);
         }
@@ -83,14 +83,13 @@ export async function METRIC(
 
     // Use proxy path for development, direct API for production
     const apiUrl = `${getApiUrl()}/v1/metrics${metric}`;
-    const rawParams = Object.fromEntries(params.entries());
-    const { source, api_key, ...filteredParams } = rawParams;
+    const { source, api_key, ...cacheKeyParams } = params;
 
     // Does it even get called? check params, maybe breakpoint.
-    const cacheId = buildCacheId(filteredParams, metric);
+    const cacheId = buildCacheId(cacheKeyParams, metric);
     const response = await apiClient.get(apiUrl, {
       params: {
-        ...Object.fromEntries(params),
+        ...params,
         source: "excel-add-in"
       },
       cache: {
