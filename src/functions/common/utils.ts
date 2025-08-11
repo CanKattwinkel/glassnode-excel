@@ -68,3 +68,14 @@ export function getApiUrl(): string {
     return 'https://api.glassnode.com';
   }
 }
+
+export function buildCacheId(filteredParams: Object, metric: string) {
+  const relevantParams = {...filteredParams, metric};
+  const sorted = Object.keys(relevantParams)
+      .sort()
+      .reduce((obj, key) => {
+        obj[key] = relevantParams[key];
+        return obj;
+      }, {});
+  return `metrics-${JSON.stringify(sorted)}`;
+}

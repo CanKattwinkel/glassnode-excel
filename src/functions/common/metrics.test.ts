@@ -2,6 +2,9 @@ import { METRIC } from './metrics';
 import { apiClient } from './api';
 import MockAdapter from 'axios-mock-adapter';
 
+// Import the entire module for spying
+import * as metricsModule from './utils';
+
 describe('METRIC function', () => {
   let mock: MockAdapter;
 
@@ -415,6 +418,27 @@ describe('METRIC function', () => {
 
       expect(result).toEqual([['Error: 429 rate limit exceeded - too many requests to the Glassnode API']]);
       expect(mock.history.get).toHaveLength(1);
+    });
+  });
+
+  describe('caching behavior', () => {
+    let buildCacheIdSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      // Spy on the buildCacheId function
+      buildCacheIdSpy = jest.spyOn(metricsModule, 'buildCacheId');
+    });
+
+    afterEach(() => {
+      buildCacheIdSpy.mockRestore();
+    });
+
+    it('should call buildCacheId with correct parameters', async () => {
+      const mockResponse = [{ t: 1640995200, v: 100.5 }];
+      mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
+      await METRIC('BTC', '/addresses/active_count', '44562');
+      expect(buildCacheIdSpy).toHaveBeenCalled();
+      expect(buildCacheIdSpy).toHaveBeenCalledWith({"a": "BTC", "i": "24h", "s": "1640995200"}, "/addresses/active_count");
     });
   });
 });

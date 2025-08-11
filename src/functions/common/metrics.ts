@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 import { apiClient } from './api';
-import { getApiKey, parseDate, getApiUrl } from './utils';
+import { getApiKey, parseDate, getApiUrl, buildCacheId } from './utils';
 
 export async function METRIC(
   asset: string,
@@ -85,15 +85,9 @@ export async function METRIC(
     const apiUrl = `${getApiUrl()}/v1/metrics${metric}`;
     const rawParams = Object.fromEntries(params.entries());
     const { source, api_key, ...filteredParams } = rawParams;
-    let cacheIds = {...filteredParams, metric };
-    const sorted = Object.keys(cacheIds)
-        .sort()
-        .reduce((obj, key) => {
-          obj[key] = cacheIds[key];
-          return obj;
-        }, {});
 
-    const cacheId = `metrics-${JSON.stringify(sorted)}`;
+    // Does it even get called? check params, maybe breakpoint.
+    const cacheId = buildCacheId(filteredParams, metric);
     const response = await apiClient.get(apiUrl, {
       params: {
         ...Object.fromEntries(params),
