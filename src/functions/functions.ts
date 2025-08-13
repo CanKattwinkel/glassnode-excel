@@ -2,6 +2,7 @@
 
 import { ASSETS as ASSETS_IMPL } from './common/assets';
 import { METRIC as METRIC_IMPL } from './common/metrics';
+import { normalizeDateInput } from './common/normalizeDateInput';
 
 /**
  * Fetches asset IDs from Glassnode API
@@ -38,5 +39,19 @@ export async function METRIC(
   parameter3: string| null = null,
   parameter4: string| null = null
 ): Promise<string[][]> {
-  return METRIC_IMPL(asset, metric, startDate, endDate, parameter1, parameter2, parameter3, parameter4);
+  // Validate required parameters early (UX layer responsibility)
+  if (!asset || !metric || !startDate) {
+    return [['Error: asset, metric, and startDate are required parameters']];
+  }
+  if (!metric.startsWith('/')) {
+    return [['Error: Invalid path, make sure to use API endpoint notation like /addresses/active_count']];
+  }
+  const startRes = normalizeDateInput(startDate);
+  if (startRes.ok === false) return [[`Error: ${startRes.error}`]];
+  if (endDate !== null && endDate !== undefined) {
+    const endRes = normalizeDateInput(endDate);
+    if (endRes.ok === false) return [[`Error: ${endRes.error}`]];
+    return METRIC_IMPL(asset, metric, startRes.date, endRes.date, parameter1, parameter2, parameter3, parameter4);
+  }
+  return METRIC_IMPL(asset, metric, startRes.date, null, parameter1, parameter2, parameter3, parameter4);
 }

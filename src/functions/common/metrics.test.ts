@@ -1,4 +1,5 @@
-import { METRIC } from './metrics';
+// Use the public wrapper which handles Excel serial / string date parsing
+import { METRIC } from '../functions';
 import { apiClient } from './api';
 import MockAdapter from 'axios-mock-adapter';
 

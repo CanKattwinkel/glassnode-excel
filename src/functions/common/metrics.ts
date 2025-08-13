@@ -2,17 +2,19 @@
 
 import axios from 'axios';
 import { apiClient } from './api';
-import { getApiKey, parseDate, getApiUrl, buildCacheId } from './utils';
+import { getApiKey, getApiUrl, buildCacheId } from './utils';
+import { dateToUnixSeconds, unixSecondsToYyyyMmDd } from './dateUtils';
+
 
 export async function METRIC(
   asset: string,
   metric: string,
-  startDate: string | number,
-  endDate: string | number | null = null,
+  startDate: Date,
+  endDate: Date | null = null,
   parameter1: string | null = null,
-  parameter2: string| null = null,
-  parameter3: string| null = null,
-  parameter4: string| null = null
+  parameter2: string | null = null,
+  parameter3: string | null = null,
+  parameter4: string | null = null
 ): Promise<string[][]> {
   try {
     
@@ -23,36 +25,9 @@ export async function METRIC(
       return [['Error: API key not configured. Please set your API key in the task pane.']];
     }
 
-    // Validate required parameters
-    if (!asset || !metric || !startDate) {
-      console.log('Missing required parameters:', { asset: !!asset, metric: !!metric, startDate: !!startDate });
-      return [['Error: asset, metric, and startDate are required parameters']];
-    }
-
-    // Validate metric path format
-    if (!metric.startsWith('/')) {
-      console.log('Invalid metric path format:', metric);
-      return [['Error: Invalid path, make sure to use API endpoint notation like /addresses/active_count']];
-    }
-
-    // Convert start date to timestamp
-    const startDateResult = parseDate(startDate);
-    if (startDateResult.error) {
-      console.log('Invalid start date:', startDate, startDateResult.error);
-      return [['Error: ' + startDateResult.error]];
-    }
-    const startTimestamp = startDateResult.timestamp;
-    
-    let endTimestamp: number | null = null;
-    if (endDate !== null) {
-      const endDateResult = parseDate(endDate);
-      if (endDateResult.error) {
-        console.log('Invalid end date:', endDate, endDateResult.error);
-        return [['Error: ' + endDateResult.error]];
-      }
-      endTimestamp = endDateResult.timestamp;
-      console.log('End date converted:', { endDate, endTimestamp });
-    }
+    // Convert provided Date objects to unix timestamps (seconds)
+  const startTimestamp = dateToUnixSeconds(startDate);
+  const endTimestamp = endDate ? dateToUnixSeconds(endDate) : null;
 
     // Build URL parameters
     const params = {
@@ -60,7 +35,6 @@ export async function METRIC(
       a: asset,
       i: '24h',
       s: startTimestamp.toString(),
-      source: "excel-add-in"
     };
 
     if (endTimestamp) {
@@ -83,7 +57,7 @@ export async function METRIC(
 
     // Use proxy path for development, direct API for production
     const apiUrl = `${getApiUrl()}/v1/metrics${metric}`;
-    const { source, api_key, ...cacheKeyParams } = params;
+    const { api_key, ...cacheKeyParams } = params;
 
     // Does it even get called? check params, maybe breakpoint.
     const cacheId = buildCacheId(cacheKeyParams, metric);
@@ -104,7 +78,7 @@ export async function METRIC(
     }
     
     // If only one date specified or only one data point returned, return single value
-    if (!endDate || response.data.length === 1) {
+  if (!endDate || response.data.length === 1) {
       const value = response.data[0]?.v;
       return value !== undefined ? [[value]] : [['No data available']];
     }
@@ -114,8 +88,8 @@ export async function METRIC(
     const headers = ['Date', metricName];
     
     const dataRows = response.data.map(item => [
-      new Date(item.t * 1000).toISOString().split('T')[0], // Convert Unix timestamp to YYYY-MM-DD format
-      item.v  // Convert value to string
+      unixSecondsToYyyyMmDd(item.t),
+      item.v
     ]);
 
     return [headers, ...dataRows];
