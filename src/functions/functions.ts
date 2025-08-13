@@ -4,6 +4,8 @@ import { ASSETS as ASSETS_IMPL } from './common/assets';
 import { METRIC as METRIC_IMPL } from './common/metrics';
 import { normalizeDateInput } from './common/normalizeDateInput';
 
+const ADDIN_VERSION = '0.1.0';
+
 /**
  * Fetches asset IDs from Glassnode API
  * @customfunction
@@ -12,6 +14,7 @@ import { normalizeDateInput } from './common/normalizeDateInput';
  * @returns Array of asset IDs
  */
 export async function ASSETS(limit: number = null): Promise<string[][]> {
+  console.log(`[GlassnodeExcel v${ADDIN_VERSION}] ASSETS`, { limit });
   return ASSETS_IMPL(limit);
 }
 
@@ -39,6 +42,7 @@ export async function METRIC(
   parameter3: string| null = null,
   parameter4: string| null = null
 ): Promise<string[][]> {
+  console.log(`[GlassnodeExcel v${ADDIN_VERSION}] METRIC`, { asset, metric, startDate, endDate, parameter1, parameter2, parameter3, parameter4 });
   // Validate required parameters early (UX layer responsibility)
   if (!asset || !metric || !startDate) {
     return [['Error: asset, metric, and startDate are required parameters']];
