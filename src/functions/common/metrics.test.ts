@@ -66,7 +66,7 @@ describe('METRIC function', () => {
     const result = await METRIC('BTC', '/addresses/active_count', startDate, endDate);
 
     expect(result).toEqual([
-      ['Date', 'active.count'],
+      ['Date', '/addresses/active_count'],
       ['2022-01-01', 100.5],
       ['2022-01-02', 102.3],
     ]);
@@ -161,7 +161,7 @@ describe('METRIC function', () => {
 
     // Verify the result format
     expect(result).toEqual([
-      ['Date', 'price.usd.close'],
+      ['Date', '/market/price_usd_close'],
       ['2024-01-01', 42167.84],
       ['2024-01-02', 44172.56],
       ['2024-01-03', 44294.32],
@@ -236,7 +236,7 @@ describe('METRIC function', () => {
     const result = await METRIC('BTC', '/market/price_usd_close', '2024-01-01', '2024-01-30');
 
     expect(result).toEqual([
-      ['Date', 'price.usd.close'],
+      ['Date', '/market/price_usd_close'],
       ['2024-01-01', 42167.84],
       ['2024-01-02', 44172.56],
       ['2024-01-30', 43156.78],

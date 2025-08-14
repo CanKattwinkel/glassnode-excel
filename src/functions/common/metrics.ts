@@ -84,8 +84,7 @@ export async function METRIC(
     }
 
     // Return table format with headers
-    const metricName = metric.split('/').pop()?.replace(/_/g, '.') || 'value';
-    const headers = ['Date', metricName];
+    const headers = ['Date', metric];
     
     const dataRows = response.data.map(item => [
       unixSecondsToYyyyMmDd(item.t),
