@@ -1,7 +1,6 @@
-import { normalizeDateInput } from './normalizeDateInput';
+import {normalizeDateInput} from './normalizeDateInput';
 
 describe('normalizeDateInput', () => {
-
   it('parses YYYY-MM-DD string', () => {
     const res = normalizeDateInput('2024-01-01');
     expect(res.ok).toBe(true);

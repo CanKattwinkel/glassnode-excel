@@ -14,14 +14,13 @@ export async function getApiKey(): Promise<string | null> {
   }
 }
 
-
 /**
  * Helper function to get the appropriate API base URL based on environment
  * @returns The base API URL for the current environment
  */
 export function getApiUrl(): string {
   const isDevelopment = window?.location?.hostname === 'localhost';
-  
+
   if (isDevelopment) {
     return '/api/glassnode';
   } else {
@@ -29,13 +28,13 @@ export function getApiUrl(): string {
   }
 }
 
-export function buildCacheId(filteredParams: Object, metric: string) {
+export function buildCacheId(filteredParams: object, metric: string) {
   const relevantParams = {...filteredParams, metric};
   const sorted = Object.keys(relevantParams)
-      .sort()
-      .reduce((obj, key) => {
-        obj[key] = relevantParams[key];
-        return obj;
-      }, {});
+    .sort()
+    .reduce((obj, key) => {
+      obj[key] = relevantParams[key];
+      return obj;
+    }, {});
   return `metrics-${JSON.stringify(sorted)}`;
 }

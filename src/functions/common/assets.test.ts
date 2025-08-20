@@ -1,8 +1,9 @@
-import { ASSETS } from './assets';
-import { apiClient } from './api';
+import {ASSETS} from './assets';
+import {apiClient} from './api';
 import MockAdapter from 'axios-mock-adapter';
 
 describe('ASSETS function', () => {
+  // @ts-ignore
   let mock: MockAdapter;
 
   beforeEach(() => {
@@ -10,17 +11,13 @@ describe('ASSETS function', () => {
     if (typeof localStorage !== 'undefined') {
       localStorage.clear();
     }
-    
+
     // Create MockAdapter for the cached axios instance, not the base axios
     mock = new MockAdapter(apiClient);
     (global as any).OfficeRuntime.storage.getItem.mockReturnValue('test-api-key');
-    
+
     // Clear the cache storage before each test
-    try {
-      (apiClient as any).storage?.clear?.();
-    } catch (e) {
-      // Ignore errors if storage doesn't exist
-    }
+    (apiClient as any).storage?.clear?.();
   });
 
   afterEach(() => {
@@ -29,11 +26,7 @@ describe('ASSETS function', () => {
 
   it('should return asset IDs when API call is successful', async () => {
     const mockResponse = {
-      data: [
-        { id: 'BTC' },
-        { id: 'ETH' },
-        { id: 'ADA' },
-      ],
+      data: [{id: 'BTC'}, {id: 'ETH'}, {id: 'ADA'}],
     };
 
     mock.onGet('/api/glassnode/v1/metadata/assets').reply(200, mockResponse);
@@ -42,9 +35,9 @@ describe('ASSETS function', () => {
 
     expect(result).toEqual([['BTC'], ['ETH']]);
     expect(mock.history.get).toHaveLength(1);
-    expect(mock.history.get[0].params).toEqual({ 
+    expect(mock.history.get[0].params).toEqual({
       api_key: 'test-api-key',
-      source: 'excel-add-in'
+      source: 'excel-add-in',
     });
   });
 
@@ -67,13 +60,7 @@ describe('ASSETS function', () => {
 
   it('should apply limit parameter correctly', async () => {
     const mockResponse = {
-      data: [
-        { id: 'BTC' },
-        { id: 'ETH' },
-        { id: 'ADA' },
-        { id: 'DOT' },
-        { id: 'LINK' },
-      ],
+      data: [{id: 'BTC'}, {id: 'ETH'}, {id: 'ADA'}, {id: 'DOT'}, {id: 'LINK'}],
     };
 
     mock.onGet('/api/glassnode/v1/metadata/assets').reply(200, mockResponse);
@@ -86,14 +73,7 @@ describe('ASSETS function', () => {
 
   it('should filter out undefined/null IDs', async () => {
     const mockResponse = {
-      data: [
-        { id: 'BTC' },
-        { id: null },
-        { id: 'ETH' },
-        { id: undefined },
-        { id: 'ADA' },
-        { id: '' },
-      ],
+      data: [{id: 'BTC'}, {id: null}, {id: 'ETH'}, {id: undefined}, {id: 'ADA'}, {id: ''}],
     };
 
     mock.onGet('/api/glassnode/v1/metadata/assets').reply(200, mockResponse);
@@ -106,22 +86,18 @@ describe('ASSETS function', () => {
 
   it('should cache requests and return same results for identical requests', async () => {
     const mockResponse = {
-      data: [{ id: 'BTC' }],
+      data: [{id: 'BTC'}],
     };
 
     mock.onGet('/api/glassnode/v1/metadata/assets').reply(200, mockResponse);
 
     // Make multiple identical requests
-    const [result1, result2, result3] = await Promise.all([
-      ASSETS(10),
-      ASSETS(10),
-      ASSETS(10)
-    ]);
+    const [result1, result2, result3] = await Promise.all([ASSETS(10), ASSETS(10), ASSETS(10)]);
 
     expect(result1).toEqual([['BTC']]);
     expect(result2).toEqual([['BTC']]);
     expect(result3).toEqual([['BTC']]);
-    
+
     // All results should be identical (proving cache works)
     expect(result1).toEqual(result2);
     expect(result2).toEqual(result3);
@@ -147,13 +123,7 @@ describe('ASSETS function', () => {
 
     it('should use same cache for different limits and return consistent results', async () => {
       const mockResponse = {
-        data: [
-          { id: 'BTC' },
-          { id: 'ETH' },
-          { id: 'ADA' },
-          { id: 'DOT' },
-          { id: 'LINK' },
-        ],
+        data: [{id: 'BTC'}, {id: 'ETH'}, {id: 'ADA'}, {id: 'DOT'}, {id: 'LINK'}],
       };
 
       mock.onGet('/api/glassnode/v1/metadata/assets').reply(200, mockResponse);
