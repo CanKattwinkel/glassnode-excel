@@ -448,14 +448,8 @@ describe('METRIC function', () => {
   describe('for object response types', () => {
     it('should throw for unsupported response types (types other than v or o)', async () => {
       const mockResponse = [
-        {
-          t: 1279324800,
-          x: null,
-        },
-        {
-          t: 1279411200,
-          x: null,
-        },
+        {t: 1279324800, x: null},
+        {t: 1279411200, x: null},
       ];
 
       mock.onGet('/api/glassnode/v1/metrics/xx').reply(200, mockResponse);
@@ -495,14 +489,8 @@ describe('METRIC function', () => {
     });
     it('should be able to return OHLC responses', async () => {
       const mockResponse = [
-        {
-          t: 1279324800,
-          o: {c: 0.04951, h: 0.04951, l: 0.04951, o: 0.04951},
-        },
-        {
-          t: 1279411200,
-          o: {c: 0.051, h: 0.052, l: 0.048, o: 0.05},
-        },
+        {t: 1279324800, o: {c: 0.04951, h: 0.04951, l: 0.04951, o: 0.04951}},
+        {t: 1279411200, o: {c: 0.051, h: 0.052, l: 0.048, o: 0.05}},
       ];
       mock.onGet('/api/glassnode/v1/metrics/y').reply(200, mockResponse);
       const result = await METRIC('x', '/y', '2010-07-17', '2010-07-19');
@@ -512,6 +500,52 @@ describe('METRIC function', () => {
         ['2010-07-18', 0.051, 0.052, 0.048, 0.05],
       ]);
       expect(mock.history.get).toHaveLength(1);
+    });
+
+    it('should be able to handle single value rows', async () => {
+      const mockResponse = [{t: 1279324800, o: {c: 0.0, h: 0.0, l: 0.0, o: 0.0}}];
+      mock.onGet('/api/glassnode/v1/metrics/y').reply(200, mockResponse);
+      const result = await METRIC('x', '/y', '2010-07-17');
+      expect(result).toEqual([
+        ['Date', '/y.c', '/y.h', '/y.l', '/y.o'],
+        ['2010-07-17', 0.0, 0.0, 0.0, 0.0],
+      ]);
+      expect(mock.history.get).toHaveLength(1);
+    });
+
+    describe('pick', () => {
+      it('should allow a user to pick a single object attribute for single line response', async () => {
+        const mockResponse = [{t: 1279324800, o: {c: 0.1, h: 0.0, l: 0.0, o: 0.0}}];
+        mock.onGet('/api/glassnode/v1/metrics/y').reply(200, mockResponse);
+        const result = await METRIC('x', '/y', '2010-07-17', null, null, null, null, null, 'c');
+        expect(result).toEqual([[0.1]]);
+        expect(mock.history.get).toHaveLength(1);
+      });
+      it('should allow a user to pick a single object attribute when end date is provided', async () => {
+        const mockResponse = [
+          {t: 1279324800, o: {c: 0.1, h: 0.0, l: 0.0, o: 0.0}},
+          {t: 1279411200, o: {c: 0.2, h: 0.0, l: 0.0, o: 0.0}},
+        ];
+        mock.onGet('/api/glassnode/v1/metrics/y').reply(200, mockResponse);
+        const result = await METRIC('x', '/y', '2010-07-17', '2010-07-18', null, null, null, null, 'c');
+        expect(result).toEqual([
+          ['Date', '/y.c'],
+          ['2010-07-17', 0.1],
+          ['2010-07-18', 0.2],
+        ]);
+        expect(mock.history.get).toHaveLength(1);
+      });
+
+      it('should only return one value if no end date is provided', async () => {
+        const mockResponse = [
+          {t: 1279324800, o: {c: 0.1, h: 0.0, l: 0.0, o: 0.0}},
+          {t: 1279411200, o: {c: 0.2, h: 0.0, l: 0.0, o: 0.0}},
+        ];
+        mock.onGet('/api/glassnode/v1/metrics/y').reply(200, mockResponse);
+        const result = await METRIC('x', '/y', '2010-07-17', null, null, null, null, null, 'c');
+        expect(result).toEqual([[0.1]]);
+        expect(mock.history.get).toHaveLength(1);
+      });
     });
   });
 });

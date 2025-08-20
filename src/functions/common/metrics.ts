@@ -14,6 +14,7 @@ export async function METRIC(
   parameter2: string | null = null,
   parameter3: string | null = null,
   parameter4: string | null = null,
+  pick: string | null = null,
 ): Promise<string[][]> {
   try {
     // Get API key from settings
@@ -60,8 +61,10 @@ export async function METRIC(
 
     // Does it even get called? check params, maybe breakpoint.
     const cacheId = buildCacheId(cacheKeyParams, metric);
-    type ResponseItem = {v: unknown} | {o: unknown} | Record<string, unknown>;
-    const response = await apiClient.get<{data: Array<ResponseItem>}>(apiUrl, {
+    type ObjectResponseItem = {t: number; o: Record<string, unknown>};
+    type ValueResponseItem = {t: number; v: unknown};
+    type ResponseItem = ObjectResponseItem | ValueResponseItem;
+    const response = await apiClient.get<ResponseItem[]>(apiUrl, {
       params: {
         ...params,
         source: 'excel-add-in',
@@ -72,37 +75,61 @@ export async function METRIC(
       id: cacheId,
     });
 
-    const responseType: 'value' | 'object' | null | 'unclear' = (() => {
-      const first = response.data?.[0];
-      if (!first) return null;
+    // If endDate is not provided and no pick is requested, limit to the first data point
+    const rawRows: ResponseItem[] = Array.isArray(response.data) ? response.data : [];
+    const rows: ResponseItem[] = endTimestamp == null ? rawRows.slice(0, 1) : rawRows;
+
+    if (rows.length === 0) {
+      return [['No data available']];
+    }
+
+    const responseType: 'value' | 'object' | null = (() => {
+      const first = rows[0];
       if ('v' in first) return 'value';
       if ('o' in first) return 'object';
-      return 'unclear';
+      return null;
     })();
 
-    if (!response.data || !Array.isArray(response.data) || responseType === 'unclear') {
-      console.log('Invalid response format - Metric not supported:', response.data);
+    if (responseType === null) {
+      console.log('Invalid response format - Metric not supported:', rows);
       throw new Error('Invalid response format - Metric not supported');
     }
 
     if (responseType === 'value') {
-      if (!endDate || response.data.length === 1) {
-        const value = response.data[0]?.v;
-        return value !== undefined ? [[value]] : [['No data available']];
+      const valueData = rows as ValueResponseItem[];
+      if (valueData.length === 1) {
+        const value = valueData[0].v;
+        return [[value]] as unknown as string[][];
       }
       // Return table format with headers
       const headers = ['Date', metric];
 
-      const dataRows = response.data.map(item => [unixSecondsToYyyyMmDd(item.t), item.v]);
+      const dataRows = valueData.map(item => [unixSecondsToYyyyMmDd(item.t), item.v]);
 
-      return [headers, ...dataRows];
+      return [headers, ...dataRows] as unknown as string[][];
     }
 
     if (responseType === 'object') {
+      const objectData = rows as ObjectResponseItem[];
+      if (pick !== null) {
+        const multi = objectData.length > 1;
+        if (!multi) {
+          // Single data point: return just the picked value
+          const only = objectData[0];
+          const val = only.o?.[pick];
+          return [[val]] as unknown as string[][];
+        }
+
+        // Multiple data points: return Date + picked column
+        const headers = ['Date', `${metric}.${pick}`];
+        const dataRows = objectData.map(item => [unixSecondsToYyyyMmDd(item.t), item.o?.[pick]]);
+        return [headers, ...dataRows] as unknown as string[][];
+      }
+
       // Return table format with headers
-      const headers = ['Date', ...Object.keys(response.data[0]?.o || {}).map(it => `${metric}.${it}`)];
-      const dataRows = response.data.map(item => [unixSecondsToYyyyMmDd(item.t), ...(Object.values(item.o) as string[])]);
-      return [headers, ...dataRows];
+      const headers = ['Date', ...Object.keys(objectData[0]?.o || {}).map(it => `${metric}.${it}`)];
+      const dataRows = objectData.map(item => [unixSecondsToYyyyMmDd(item.t), ...(Object.values(item.o) as unknown[])]);
+      return [headers, ...dataRows] as unknown as string[][];
     }
   } catch (error) {
     console.error('Error in METRIC function:', error);

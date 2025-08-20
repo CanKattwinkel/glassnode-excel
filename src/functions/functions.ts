@@ -4,7 +4,7 @@ import {ASSETS as ASSETS_IMPL} from './common/assets';
 import {METRIC as METRIC_IMPL} from './common/metrics';
 import {normalizeDateInput} from './common/normalizeDateInput';
 
-const ADDIN_VERSION = '0.1.0';
+const ADDIN_VERSION = '0.1.2';
 
 /**
  * Fetches asset IDs from Glassnode API
@@ -29,6 +29,7 @@ export async function ASSETS(limit: number = null): Promise<string[][]> {
  * @param [parameter2] Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
  * @param [parameter3] Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
  * @param [parameter4] Optional parameter in key=value format (e.g., "e=binance", "miner=FoundryUSAPool", "c=usd", "network=base", ...)
+ * @param [pick] For metrics that return an object you can pick
  * @helpUrl https://github.com/CanKattwinkel/glassnode-excel/
  * @returns Single value or table with Date and metric columns
  */
@@ -41,6 +42,7 @@ export async function METRIC(
   parameter2: string | null = null,
   parameter3: string | null = null,
   parameter4: string | null = null,
+  pick: string | null = null,
 ): Promise<string[][]> {
   console.log(`[GlassnodeExcel v${ADDIN_VERSION}] METRIC`, {
     asset,
@@ -51,6 +53,7 @@ export async function METRIC(
     parameter2,
     parameter3,
     parameter4,
+    pick,
   });
   // Validate required parameters early (UX layer responsibility)
   if (!asset || !metric || !startDate) {
@@ -64,7 +67,7 @@ export async function METRIC(
   if (endDate !== null && endDate !== undefined) {
     const endRes = normalizeDateInput(endDate);
     if (endRes.ok === false) return [[`Error: ${endRes.error}`]];
-    return METRIC_IMPL(asset, metric, startRes.date, endRes.date, parameter1, parameter2, parameter3, parameter4);
+    return METRIC_IMPL(asset, metric, startRes.date, endRes.date, parameter1, parameter2, parameter3, parameter4, pick);
   }
-  return METRIC_IMPL(asset, metric, startRes.date, null, parameter1, parameter2, parameter3, parameter4);
+  return METRIC_IMPL(asset, metric, startRes.date, null, parameter1, parameter2, parameter3, parameter4, pick);
 }
