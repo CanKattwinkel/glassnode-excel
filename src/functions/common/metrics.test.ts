@@ -442,4 +442,86 @@ describe('METRIC function', () => {
       expect(buildCacheIdSpy).toHaveBeenCalledWith({"a": "BTC", "i": "24h", "s": "1640995200"}, "/addresses/active_count");
     });
   });
+
+    describe('for object response types', ()=> {
+      it('should throw for unsupported response types (types other than v or o)', async ()=> {
+        const mockResponse = [
+          {
+            t: 1279324800,
+            x: null,
+          },
+          {
+            t: 1279411200,
+            x: null,
+          },
+        ];
+
+        mock
+            .onGet('/api/glassnode/v1/metrics/xx')
+            .reply(200, mockResponse);
+
+        const result = await METRIC(
+            'BTC',
+            '/xx',
+            '2010-07-17',
+            '2010-07-19'
+        );
+
+        expect(result).toEqual([
+          ['Error: Invalid response format - Metric not supported'],
+        ]);
+
+      })
+
+      it('should be able to return breakdown responses',  async ()=> {
+          const mockResponse = [
+              {
+                  "t": 1230940800,
+                  "o": {
+                      "1d_1w": 1,
+                      "1m_3m": 2,
+                      "aggregated": 1.5,
+                  }
+              },
+              {
+                  "t": 1231027200,
+                  "o": {
+                      "1d_1w": 2,
+                      "1m_3m": 3,
+                      "aggregated": 2.5,
+                  }
+              },
+          ];
+          mock.onGet('/api/glassnode/v1/metrics/y').reply(200, mockResponse);
+          const result = await METRIC('x', '/y','2010-07-17','2010-07-19');
+          expect(result).toEqual([
+              ['Date', '/y.1d_1w', '/y.1m_3m', '/y.aggregated'],
+              ['2009-01-03', 1, 2, 1.5],
+              ['2009-01-04', 2, 3, 2.5],
+          ]);
+          expect(mock.history.get).toHaveLength(1);
+
+      })
+      it('should be able to return OHLC responses', async () => {
+        const mockResponse = [
+          {
+            t: 1279324800,
+            o: { c: 0.04951, h: 0.04951, l: 0.04951, o: 0.04951 },
+          },
+          {
+            t: 1279411200,
+            o: { c: 0.051, h: 0.052, l: 0.048, o: 0.05 },
+          },
+        ];
+        mock.onGet('/api/glassnode/v1/metrics/y').reply(200, mockResponse);
+        const result = await METRIC('x', '/y','2010-07-17','2010-07-19');
+        expect(result).toEqual([
+          ['Date', '/y.c', '/y.h', '/y.l', '/y.o'],
+          ['2010-07-17', 0.04951, 0.04951, 0.04951, 0.04951],
+          ['2010-07-18', 0.051, 0.052, 0.048, 0.05],
+        ]);
+        expect(mock.history.get).toHaveLength(1);
+      });
+    });
 });
+

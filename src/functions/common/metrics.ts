@@ -61,7 +61,8 @@ export async function METRIC(
 
     // Does it even get called? check params, maybe breakpoint.
     const cacheId = buildCacheId(cacheKeyParams, metric);
-    const response = await apiClient.get(apiUrl, {
+    type ResponseItem = { v: unknown } | { o: unknown } | Record<string, unknown>;
+    const response = await apiClient.get<{data: Array<ResponseItem>}>(apiUrl, {
       params: {
         ...params,
         source: "excel-add-in"
@@ -70,28 +71,49 @@ export async function METRIC(
         ttl: 3 * 60 * 1000, // 3 min
       },
       id: cacheId
-    });    
+    });
     
-    if (!response.data || !Array.isArray(response.data)) {
-      console.log('Invalid response format - not an array:', response.data);
-      throw new Error('Invalid response format');
-    }
-    
-    // If only one date specified or only one data point returned, return single value
-  if (!endDate || response.data.length === 1) {
-      const value = response.data[0]?.v;
-      return value !== undefined ? [[value]] : [['No data available']];
+
+
+    const responseType: "value" | "object" | null | 'unclear' = (() => {
+      const first = response.data?.[0];
+      if (!first) return null;
+      if ("v" in first) return "value";
+      if ("o" in first) return "object";
+      return "unclear";
+    })();
+
+    if (!response.data || !Array.isArray(response.data) || responseType === 'unclear') {
+      console.log('Invalid response format - Metric not supported:', response.data);
+      throw new Error('Invalid response format - Metric not supported');
     }
 
-    // Return table format with headers
-    const headers = ['Date', metric];
-    
-    const dataRows = response.data.map(item => [
-      unixSecondsToYyyyMmDd(item.t),
-      item.v
-    ]);
+    if(responseType === 'value') {
+      if (!endDate || response.data.length === 1) {
+        const value = response.data[0]?.v;
+        return value !== undefined ? [[value]] : [['No data available']];
+      }
+      // Return table format with headers
+      const headers = ['Date', metric];
 
-    return [headers, ...dataRows];
+      const dataRows = response.data.map(item => [
+        unixSecondsToYyyyMmDd(item.t),
+        item.v
+      ]);
+
+      return [headers, ...dataRows];
+    }
+
+    if(responseType === 'object') {
+      // Return table format with headers
+      const headers = ['Date', ...Object.keys(response.data[0]?.o || {}).map(it => `${metric}.${it}`)];
+      const dataRows = response.data.map(item => [
+        unixSecondsToYyyyMmDd(item.t),
+          ...Object.values(item.o) as string[]
+      ]);
+      return [headers, ...dataRows];
+    }
+
     
   } catch (error) {
     console.error('Error in METRIC function:', error);
