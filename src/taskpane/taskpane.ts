@@ -6,10 +6,19 @@
 /* global console, document,  Office, OfficeRuntime */
 
 // The initialize function must be run each time a new page is loaded
+import {ADDIN_VERSION} from '../version';
+import {isDevEnv} from '../functions/common/utils';
+
 Office.onReady(() => {
   document.getElementById('sideload-msg').style.display = 'none';
   document.getElementById('app-body').style.display = 'flex';
   document.getElementById('save-api-key').onclick = saveApiKey;
+
+  // Update version badge if present
+  const versionEl = document.getElementById('plugin-version');
+  if (versionEl) {
+    versionEl.textContent = 'v' + ADDIN_VERSION + (isDevEnv() ? '_DEV' : '');
+  }
 
   // Load existing API key if available
   loadApiKey();

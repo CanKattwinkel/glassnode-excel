@@ -14,12 +14,16 @@ export async function getApiKey(): Promise<string | null> {
   }
 }
 
+export function isDevEnv() {
+  return window?.location?.hostname === 'localhost';
+}
+
 /**
  * Helper function to get the appropriate API base URL based on environment
  * @returns The base API URL for the current environment
  */
 export function getApiUrl(): string {
-  const isDevelopment = window?.location?.hostname === 'localhost';
+  const isDevelopment = isDevEnv();
 
   if (isDevelopment) {
     return '/api/glassnode';

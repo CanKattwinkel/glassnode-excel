@@ -3,8 +3,7 @@
 import {ASSETS as ASSETS_IMPL} from './common/assets';
 import {METRIC as METRIC_IMPL} from './common/metrics';
 import {normalizeDateInput} from './common/normalizeDateInput';
-
-const ADDIN_VERSION = '0.1.2';
+import {ADDIN_VERSION} from '../version';
 
 /**
  * Fetches asset IDs from Glassnode API
