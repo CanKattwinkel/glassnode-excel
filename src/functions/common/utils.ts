@@ -42,3 +42,15 @@ export function buildCacheId(filteredParams: object, metric: string) {
     }, {});
   return `metrics-${JSON.stringify(sorted)}`;
 }
+
+export function buildHeaders(objectData: {t: number; o: Record<string, unknown>}[], metric: string) {
+  const allKeys = new Set<string>();
+  for (const item of objectData) {
+    if (item.o) {
+      Object.keys(item.o).forEach(k => allKeys.add(k));
+    }
+  }
+  const keys = Array.from(allKeys).sort();
+  const headers = ['Date', ...keys.map(it => `${metric}.${it}`)];
+  return {headers, keys};
+}
