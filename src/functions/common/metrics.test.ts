@@ -1,10 +1,10 @@
 // Use the public wrapper which handles Excel serial / string date parsing
-import {METRIC} from '../functions';
-import {apiClient} from './api';
+import { METRIC } from '../functions';
+import { apiClient } from './api';
 import MockAdapter from 'axios-mock-adapter';
 
 // Import the entire module for spying
-import * as metricsModule from './utils';
+import * as utilsModule from './utils';
 
 describe('METRIC function', () => {
   // @ts-ignore
@@ -29,7 +29,7 @@ describe('METRIC function', () => {
   });
 
   it('should return single value for single data point', async () => {
-    const mockResponse = [{t: 1640995200, v: 100.5}];
+    const mockResponse = [{ t: 1640995200, v: 100.5 }];
 
     mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
 
@@ -49,8 +49,8 @@ describe('METRIC function', () => {
 
   it('should return table format for date range', async () => {
     const mockResponse = [
-      {t: 1640995200, v: 100.5},
-      {t: 1641081600, v: 102.3},
+      { t: 1640995200, v: 100.5 },
+      { t: 1641081600, v: 102.3 },
     ];
 
     mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
@@ -119,7 +119,7 @@ describe('METRIC function', () => {
   });
 
   it('should construct correct API URL with parameters', async () => {
-    const mockResponse = [{t: 1640995200, v: 100.5}];
+    const mockResponse = [{ t: 1640995200, v: 100.5 }];
 
     mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
 
@@ -143,10 +143,10 @@ describe('METRIC function', () => {
   it('should fetch BTC price data for January 2024 date range', async () => {
     // Mock response data for BTC price from 2024-01-01 to 2024-01-30
     const mockResponse = [
-      {t: 1704067200, v: 42167.84},
-      {t: 1704153600, v: 44172.56},
-      {t: 1704240000, v: 44294.32},
-      {t: 1706572800, v: 43156.78},
+      { t: 1704067200, v: 42167.84 },
+      { t: 1704153600, v: 44172.56 },
+      { t: 1704240000, v: 44294.32 },
+      { t: 1706572800, v: 43156.78 },
     ];
 
     mock.onGet('/api/glassnode/v1/metrics/market/price_usd_close').reply(200, mockResponse);
@@ -181,7 +181,7 @@ describe('METRIC function', () => {
   });
 
   it('should handle optional parameters correctly', async () => {
-    const mockResponse = [{t: 1704067200, v: 100.5}];
+    const mockResponse = [{ t: 1704067200, v: 100.5 }];
 
     mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
 
@@ -204,7 +204,7 @@ describe('METRIC function', () => {
   });
 
   it('should handle date strings (YYYY-MM-DD format) for single date', async () => {
-    const mockResponse = [{t: 1704067200, v: 45123.45}];
+    const mockResponse = [{ t: 1704067200, v: 45123.45 }];
 
     mock.onGet('/api/glassnode/v1/metrics/market/price_usd_close').reply(200, mockResponse);
 
@@ -227,9 +227,9 @@ describe('METRIC function', () => {
 
   it('should handle date strings (YYYY-MM-DD format) for date range', async () => {
     const mockResponse = [
-      {t: 1704067200, v: 42167.84},
-      {t: 1704153600, v: 44172.56},
-      {t: 1706572800, v: 43156.78},
+      { t: 1704067200, v: 42167.84 },
+      { t: 1704153600, v: 44172.56 },
+      { t: 1706572800, v: 43156.78 },
     ];
 
     mock.onGet('/api/glassnode/v1/metrics/market/price_usd_close').reply(200, mockResponse);
@@ -265,7 +265,7 @@ describe('METRIC function', () => {
   });
 
   it('should work without any optional parameters', async () => {
-    const mockResponse = [{t: 1704067200, v: 45123.45}];
+    const mockResponse = [{ t: 1704067200, v: 45123.45 }];
 
     mock.onGet('/api/glassnode/v1/metrics/market/price_usd_close').reply(200, mockResponse);
 
@@ -286,7 +286,7 @@ describe('METRIC function', () => {
   });
 
   it('should handle null endDate correctly (which is what excel will provide for unset parameters)', async () => {
-    const mockResponse = [{t: 1704067200, v: 43123.45}];
+    const mockResponse = [{ t: 1704067200, v: 43123.45 }];
 
     mock.onGet('/api/glassnode/v1/metrics/market/price_usd_close').reply(200, mockResponse);
 
@@ -308,7 +308,7 @@ describe('METRIC function', () => {
   });
 
   it('should handle all 4 optional parameters correctly', async () => {
-    const mockResponse = [{t: 1704067200, v: 100.5}];
+    const mockResponse = [{ t: 1704067200, v: 100.5 }];
 
     mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
 
@@ -333,7 +333,7 @@ describe('METRIC function', () => {
   });
 
   it('should handle mixed optional parameters (some not defined)', async () => {
-    const mockResponse = [{t: 1704067200, v: 100.5}];
+    const mockResponse = [{ t: 1704067200, v: 100.5 }];
 
     mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
 
@@ -357,7 +357,7 @@ describe('METRIC function', () => {
   });
 
   it('should ignore invalid parameter format (missing equals sign)', async () => {
-    const mockResponse = [{t: 1704067200, v: 100.5}];
+    const mockResponse = [{ t: 1704067200, v: 100.5 }];
 
     mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
 
@@ -381,7 +381,7 @@ describe('METRIC function', () => {
   });
 
   it('should handle empty string parameters', async () => {
-    const mockResponse = [{t: 1704067200, v: 100.5}];
+    const mockResponse = [{ t: 1704067200, v: 100.5 }];
 
     mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
 
@@ -429,7 +429,7 @@ describe('METRIC function', () => {
 
     beforeEach(() => {
       // Spy on the buildCacheId function
-      buildCacheIdSpy = jest.spyOn(metricsModule, 'buildCacheId');
+      buildCacheIdSpy = jest.spyOn(utilsModule, 'buildCacheId');
     });
 
     afterEach(() => {
@@ -437,19 +437,19 @@ describe('METRIC function', () => {
     });
 
     it('should call buildCacheId with correct parameters', async () => {
-      const mockResponse = [{t: 1640995200, v: 100.5}];
+      const mockResponse = [{ t: 1640995200, v: 100.5 }];
       mock.onGet('/api/glassnode/v1/metrics/addresses/active_count').reply(200, mockResponse);
       await METRIC('BTC', '/addresses/active_count', '44562');
       expect(buildCacheIdSpy).toHaveBeenCalled();
-      expect(buildCacheIdSpy).toHaveBeenCalledWith({a: 'BTC', i: '24h', s: '1640995200'}, '/addresses/active_count');
+      expect(buildCacheIdSpy).toHaveBeenCalledWith({ a: 'BTC', i: '24h', s: '1640995200' }, '/addresses/active_count');
     });
   });
 
   describe('for object response types', () => {
     it('should throw for unsupported response types (types other than v or o)', async () => {
       const mockResponse = [
-        {t: 1279324800, x: null},
-        {t: 1279411200, x: null},
+        { t: 1279324800, x: null },
+        { t: 1279411200, x: null },
       ];
 
       mock.onGet('/api/glassnode/v1/metrics/xx').reply(200, mockResponse);
@@ -489,8 +489,8 @@ describe('METRIC function', () => {
     });
     it('should be able to return OHLC responses', async () => {
       const mockResponse = [
-        {t: 1279324800, o: {c: 0.04951, h: 0.04951, l: 0.04951, o: 0.04951}},
-        {t: 1279411200, o: {c: 0.051, h: 0.052, l: 0.048, o: 0.05}},
+        { t: 1279324800, o: { c: 0.04951, h: 0.04951, l: 0.04951, o: 0.04951 } },
+        { t: 1279411200, o: { c: 0.051, h: 0.052, l: 0.048, o: 0.05 } },
       ];
       mock.onGet('/api/glassnode/v1/metrics/y').reply(200, mockResponse);
       const result = await METRIC('x', '/y', '2010-07-17', '2010-07-19');
@@ -503,7 +503,7 @@ describe('METRIC function', () => {
     });
 
     it('should be able to handle single value rows', async () => {
-      const mockResponse = [{t: 1279324800, o: {c: 0.0, h: 0.0, l: 0.0, o: 0.0}}];
+      const mockResponse = [{ t: 1279324800, o: { c: 0.0, h: 0.0, l: 0.0, o: 0.0 } }];
       mock.onGet('/api/glassnode/v1/metrics/y').reply(200, mockResponse);
       const result = await METRIC('x', '/y', '2010-07-17');
       expect(result).toEqual([
@@ -513,9 +513,35 @@ describe('METRIC function', () => {
       expect(mock.history.get).toHaveLength(1);
     });
 
+    describe('For varying keys', () => {
+    let spy: jest.SpyInstance;
+    beforeEach(() => {
+      spy = jest.spyOn(utilsModule, 'buildHeaders');
+    });
+
+    afterEach(() => {
+      spy.mockRestore();
+    });
+
+    it('should return a full table with spaces as null when the API returns a timeseries with varying keys', async () => {
+      const mockResponse = [
+        { t: 1514592000, o: { 'key1': 1 } }, // 2017-12-30
+        { t: 1514678400, o: { 'key1': 2, 'key2': 2 } }, // 2017-12-31
+      ];
+      mock.onGet('/api/glassnode/v1/metrics/entities/balances').reply(200, mockResponse);
+      const result = await METRIC('BTC', '/entities/balances', '2017-12-30', '2017-12-31');
+      expect(spy).toHaveBeenCalled();
+      expect(result).toEqual([
+        ['Date', '/entities/balances.key1', '/entities/balances.key2'],
+        ['2017-12-30', 1, ""],
+        ['2017-12-31', 2, 2],
+      ]);
+    });
+  });
+
     describe('pick', () => {
       it('should allow a user to pick a single object attribute for single line response', async () => {
-        const mockResponse = [{t: 1279324800, o: {c: 0.1, h: 0.0, l: 0.0, o: 0.0}}];
+        const mockResponse = [{ t: 1279324800, o: { c: 0.1, h: 0.0, l: 0.0, o: 0.0 } }];
         mock.onGet('/api/glassnode/v1/metrics/y').reply(200, mockResponse);
         const result = await METRIC('x', '/y', '2010-07-17', null, null, null, null, null, 'c');
         expect(result).toEqual([[0.1]]);
@@ -523,8 +549,8 @@ describe('METRIC function', () => {
       });
       it('should allow a user to pick a single object attribute when end date is provided', async () => {
         const mockResponse = [
-          {t: 1279324800, o: {c: 0.1, h: 0.0, l: 0.0, o: 0.0}},
-          {t: 1279411200, o: {c: 0.2, h: 0.0, l: 0.0, o: 0.0}},
+          { t: 1279324800, o: { c: 0.1, h: 0.0, l: 0.0, o: 0.0 } },
+          { t: 1279411200, o: { c: 0.2, h: 0.0, l: 0.0, o: 0.0 } },
         ];
         mock.onGet('/api/glassnode/v1/metrics/y').reply(200, mockResponse);
         const result = await METRIC('x', '/y', '2010-07-17', '2010-07-18', null, null, null, null, 'c');
@@ -538,8 +564,8 @@ describe('METRIC function', () => {
 
       it('should only return one value if no end date is provided', async () => {
         const mockResponse = [
-          {t: 1279324800, o: {c: 0.1, h: 0.0, l: 0.0, o: 0.0}},
-          {t: 1279411200, o: {c: 0.2, h: 0.0, l: 0.0, o: 0.0}},
+          { t: 1279324800, o: { c: 0.1, h: 0.0, l: 0.0, o: 0.0 } },
+          { t: 1279411200, o: { c: 0.2, h: 0.0, l: 0.0, o: 0.0 } },
         ];
         mock.onGet('/api/glassnode/v1/metrics/y').reply(200, mockResponse);
         const result = await METRIC('x', '/y', '2010-07-17', null, null, null, null, null, 'c');

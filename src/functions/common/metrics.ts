@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 import {apiClient} from './api';
-import {getApiKey, getApiUrl, buildCacheId} from './utils';
+import {getApiKey, getApiUrl, buildCacheId, buildHeaders} from './utils';
 import {dateToUnixSeconds, unixSecondsToYyyyMmDd} from './dateUtils';
 
 export async function METRIC(
@@ -127,8 +127,8 @@ export async function METRIC(
       }
 
       // Return table format with headers
-      const headers = ['Date', ...Object.keys(objectData[0]?.o || {}).map(it => `${metric}.${it}`)];
-      const dataRows = objectData.map(item => [unixSecondsToYyyyMmDd(item.t), ...(Object.values(item.o) as unknown[])]);
+      const {headers, keys} = buildHeaders(objectData, metric);
+      const dataRows = objectData.map(item => [unixSecondsToYyyyMmDd(item.t), ...keys.map(k => item.o?.[k] ?? '')]);
       return [headers, ...dataRows] as unknown as string[][];
     }
   } catch (error) {
